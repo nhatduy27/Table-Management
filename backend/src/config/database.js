@@ -1,18 +1,47 @@
-import {Sequelize } from 'sequelize';
-import dotenv from 'dotenv'; //Dùng cái này để đọc biến môi trường 
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
 
-dotenv.config(); //Load biến môi trường để 
+dotenv.config();
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'restaurant_db',     // 1. Tên database
-  process.env.DB_USER || 'admin',             // 2. Username
-  process.env.DB_PASSWORD || 'admin123',      // 3. Password
-  {                                           // 4. Cấu hình kết nối
-    host: process.env.DB_HOST || 'localhost', // - Địa chỉ server
-    port: parseInt(process.env.DB_PORT || '5432'), // - Port (5432 mặc định của PostgreSQL)
-    dialect: 'postgres',                      // - Loại database
-    logging: console.log,                     // - Hiện SQL query trong console
+console.log('Initializing database connection for PRODUCTION...');
+
+// Khởi tạo Sequelize
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  
+
+  dialectOptions: {
+    ssl: {
+      require: true,          
+      rejectUnauthorized: false 
+    }
+  },
+
+  logging: false, 
+  pool: {
+    max: 10,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
   }
-);
+});
 
-export default sequelize; 
+// Test connection
+const connectDB = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connected successfully!');
+    console.log('SSL Configuration: require=true, rejectUnauthorized=false');
+    return sequelize;
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    throw error;
+  }
+};
+
+// Kết nối
+connectDB().catch(err => {
+  console.error('FATAL: Cannot connect to database:', err.message);
+});
+
+export default sequelize;

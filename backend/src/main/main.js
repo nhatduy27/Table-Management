@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import sequelize from '../config/database.js';
 import tableRoutes from '../routes/table.routes.js'; 
 
-dotenv.config();
+dotenv.config(); //Load biến môi trường từ .env
 
 const app = express();
 const PORT = process.env.PORT || 5000; 
@@ -14,11 +14,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/admin', tableRoutes);
+app.use('/api/admin', tableRoutes); // các route liên quan đến quản lý bàn sẽ được route qua /api/admin
 
-
-
-// Hàm check xem kết nối database có thành công không
+// Hàm check xem kết nối database có thành công không (chỉ dùng để test thôi nha anh em)
 app.get('/connected', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -37,7 +35,6 @@ async function startServer() {
     console.log('>>> Database synced');
     
     app.listen(PORT, () => {
-      // SỬA: Dùng backtick `` thay vì dấu nháy đơn ''
       console.log(`Server running at http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
       console.log(`Connected check: http://localhost:${PORT}/connected`);
