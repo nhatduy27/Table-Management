@@ -14,7 +14,8 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/admin', tableRoutes); // các route liên quan đến quản lý bàn sẽ được route qua /api/admin
+app.use('/api', tableRoutes); // Main API routes (includes /api/menu for public access)
+app.use('/api/admin', tableRoutes); // Admin routes
 
 // Hàm check xem kết nối database có thành công không (chỉ dùng để test thôi nha anh em)
 app.get('/connected', (req, res) => {

@@ -1,6 +1,6 @@
 import Table from '../models/table.js';
 import { TableService } from '../services/table.service.js';
-import { createTableSchema } from '../validators/table.validator.js';
+import { createTableSchema, updateTableSchema, updateTableStatusSchema } from '../validators/table.validator.js';
 import { validate } from '../middlewares/validator.js';
 
 // Lấy tất cả bàn
@@ -60,7 +60,7 @@ export const getTableById = async (req, res) => {
 
 // Tạo bàn mới 
 export const createTable = [
-  validate(createTableSchema),, //validate dữ liệu đầu vào
+  validate(createTableSchema), //validate dữ liệu đầu vào
   async (req, res) => {
     try {
       const validatedData = req.validatedData;
