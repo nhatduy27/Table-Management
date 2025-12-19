@@ -3,7 +3,7 @@ import {
   getAllTable, 
   createTable, 
   getTableById,
-  updatedTable,
+  updateTable,
   updateTableStatus
 } from '../controllers/table.controller.js';
 
@@ -19,7 +19,7 @@ router.get('/tables/:id', getTableById);
 router.post('/tables', createTable);
 
 //PUT	/api/admin/tables/:id
-router.put('/tables/:id', updatedTable);
+router.put('/tables/:id', updateTable);
 
 //PATCH	/api/admin/tables/:id/status
 router.patch('/tables/:id/status', updateTableStatus);

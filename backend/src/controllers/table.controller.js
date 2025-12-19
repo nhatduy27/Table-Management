@@ -1,6 +1,8 @@
 import Table from '../models/table.js';
 import { TableService } from '../services/table.service.js';
 import { createTableSchema } from '../validators/table.validator.js';
+import { updateTableSchema } from '../validators/table.validator.js';
+import { updateTableStatusSchema } from '../validators/table.validator.js';
 import { validate } from '../middlewares/validator.js';
 
 // Lấy tất cả bàn
