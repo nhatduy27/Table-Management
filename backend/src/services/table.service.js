@@ -1,5 +1,6 @@
 import Table from '../models/table.js';
 import { Op } from 'sequelize';
+import QRService from './qr.service.js';
 
 export class TableService {
   /**
@@ -186,5 +187,121 @@ export class TableService {
     
     await table.destroy();
     return { message: 'Table deleted successfully' };
+  }
+
+  /**
+   * Generate QR code cho table
+   * @param {string} tableId - ID của bàn
+   * @returns {Promise<object>} - Table với QR token
+   */
+  static async generateQR(tableId) {
+    const table = await Table.findByPk(tableId);
+    
+    if (!table) {
+      throw new Error('Table not found');
+    }
+
+    // Tạo token mới
+    const token = QRService.generateToken(table.id);
+    
+    // Cập nhật vào database
+    await table.update({
+      qr_token: token,
+      qr_token_created_at: new Date()
+    });
+
+    return table;
+  }
+
+  /**
+   * Regenerate QR code cho table (invalidate old token)
+   * @param {string} tableId - ID của bàn
+   * @returns {Promise<object>} - Table với QR token mới
+   */
+  static async regenerateQR(tableId) {
+    const table = await Table.findByPk(tableId);
+    
+    if (!table) {
+      throw new Error('Table not found');
+    }
+
+    // Log old token for security monitoring (optional)
+    if (table.qr_token) {
+      console.log(`[SECURITY] QR token regenerated for table ${table.table_number} (ID: ${table.id})`);
+      console.log(`[SECURITY] Old token invalidated at: ${new Date().toISOString()}`);
+    }
+
+    // Generate new token
+    return await this.generateQR(tableId);
+  }
+
+  /**
+   * Bulk regenerate QR codes cho tất cả tables
+   * @param {Array} tableIds - Array of table IDs (optional, nếu không có sẽ regenerate tất cả)
+   * @returns {Promise<object>} - Summary of regenerated tables
+   */
+  static async bulkRegenerateQR(tableIds = null) {
+    let tables;
+    
+    if (tableIds && tableIds.length > 0) {
+      tables = await Table.findAll({
+        where: { id: { [Op.in]: tableIds } }
+      });
+    } else {
+      tables = await Table.findAll();
+    }
+
+    const results = {
+      total: tables.length,
+      success: 0,
+      failed: 0,
+      tables: []
+    };
+
+    for (const table of tables) {
+      try {
+        const token = QRService.generateToken(table.id);
+        await table.update({
+          qr_token: token,
+          qr_token_created_at: new Date()
+        });
+        
+        results.success++;
+        results.tables.push({
+          id: table.id,
+          table_number: table.table_number,
+          status: 'success'
+        });
+      } catch (error) {
+        results.failed++;
+        results.tables.push({
+          id: table.id,
+          table_number: table.table_number,
+          status: 'failed',
+          error: error.message
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get QR code URL cho table
+   * @param {string} tableId - ID của bàn
+   * @returns {Promise<string>} - QR code URL
+   */
+  static async getQRUrl(tableId) {
+    const table = await Table.findByPk(tableId);
+    
+    if (!table) {
+      throw new Error('Table not found');
+    }
+
+    if (!table.qr_token) {
+      throw new Error('Table does not have a QR code. Generate one first.');
+    }
+
+    return QRService.generateQRUrl(table.id, table.qr_token);
   }
 }

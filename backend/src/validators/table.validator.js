@@ -95,7 +95,7 @@ export const updateTableSchema = Joi.object({
 export const updateTableStatusSchema = Joi.object({
 
   status: Joi.string()
-    .valid('axtive', 'inactive')
+    .valid('active', 'inactive')
     .required()
     .messages({
       'any.only': 'Status must be either "active" or "inactive"',
