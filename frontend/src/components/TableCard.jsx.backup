@@ -1,0 +1,283 @@
+import { useState } from "react";
+import {
+	MapPin,
+	Users,
+	Edit2,
+	QrCode,
+	Power,
+	MoreVertical,
+	Download,
+	RefreshCw,
+} from "lucide-react";
+import { tableAPI, qrAPI } from "../utils/api";
+import { downloadQRCode, downloadQRCodePDF } from "../utils/downloadFile";
+import QRCodeModal from "./QRCodeModal";
+
+const TableCard = ({ table, onEdit, onRefresh }) => {
+	const [showMenu, setShowMenu] = useState(false);
+	const [showQRModal, setShowQRModal] = useState(false);
+	const [loading, setLoading] = useState(false);
+
+	const handleToggleStatus = async () => {
+		const newStatus = table.status === "active" ? "inactive" : "active";
+		const confirmed = confirm(
+			`Are you sure you want to ${
+				newStatus === "inactive" ? "deactivate" : "activate"
+			} table ${table.table_number}?`
+		);
+
+		if (!confirmed) return;
+
+		try {
+			setLoading(true);
+			await tableAPI.updateStatus(table.id, newStatus);
+			onRefresh();
+		} catch (err) {
+			alert(
+				err.response?.data?.message || "Failed to update table status"
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleGenerateQR = async () => {
+		try {
+			setLoading(true);
+			await qrAPI.generate(table.id);
+			onRefresh();
+			setShowQRModal(true);
+		} catch (err) {
+			alert(err.response?.data?.message || "Failed to generate QR code");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleRegenerateQR = async () => {
+		const confirmed = confirm(
+			"Are you sure you want to regenerate the QR code? The old QR code will be invalidated."
+		);
+
+		if (!confirmed) return;
+
+		try {
+			setLoading(true);
+			await qrAPI.regenerate(table.id);
+			onRefresh();
+			alert("QR code regenerated successfully!");
+		} catch (err) {
+			alert(
+				err.response?.data?.message || "Failed to regenerate QR code"
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleDownloadPNG = async () => {
+		const result = await downloadQRCode(
+			qrAPI,
+			table.id,
+			table.table_number
+		);
+		if (!result.success) {
+			alert("Failed to download QR code: " + result.error);
+		}
+	};
+
+	const handleDownloadPDF = async () => {
+		const result = await downloadQRCodePDF(
+			qrAPI,
+			table.id,
+			table.table_number
+		);
+		if (!result.success) {
+			alert("Failed to download QR code PDF: " + result.error);
+		}
+	};
+
+	const hasQRCode = table.qr_token && table.qr_token_created_at;
+
+	return (
+		<>
+			<div className="bg-linear-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-2xl hover:scale-105 transition-all duration-300 relative overflow-hidden group animate-fadeIn">
+				{/* Decorative gradient */}
+				<div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-purple-400/10 to-transparent rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+				
+				{/* Status Badge */}
+				<div className="absolute top-4 right-4 z-10">
+					<span
+						className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+							table.status === "active"
+								? "bg-linear-to-r from-green-400 to-emerald-500 text-white"
+								: "bg-linear-to-r from-gray-400 to-gray-500 text-white"
+						}`}
+					>
+						{table.status.toUpperCase()}
+					</span>
+				</div>
+
+				{/* Table Number */}
+				<div className="mb-4 relative z-10">
+					<h3 className="text-3xl font-extrabold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+						{table.table_number}
+					</h3>
+				</div>
+
+				{/* Table Info */}
+				<div className="space-y-3 mb-4 relative z-10">
+					<div className="flex items-center text-gray-700 bg-white/50 rounded-lg p-2 backdrop-blur-sm">
+						<div className="bg-linear-to-br from-blue-400 to-blue-600 p-2 rounded-lg mr-3">
+							<Users size={18} className="text-white" />
+						</div>
+						<span className="font-semibold">Capacity: <span className="text-purple-600">{table.capacity}</span> seats</span>
+					</div>
+					{table.location && (
+						<div className="flex items-center text-gray-700 bg-white/50 rounded-lg p-2 backdrop-blur-sm">
+							<div className="bg-linear-to-br from-pink-400 to-pink-600 p-2 rounded-lg mr-3">
+								<MapPin size={18} className="text-white" />
+							</div>
+							<span className="font-semibold">{table.location}</span>
+						</div>
+					)}
+				</div>
+
+				{/* Description */}
+				{table.description && (
+					<p className="text-sm text-gray-600 mb-4 line-clamp-2 bg-white/30 p-3 rounded-lg backdrop-blur-sm relative z-10">
+						{table.description}
+					</p>
+				)}
+
+				{/* QR Code Status */}
+				<div className="mb-4 pb-4 border-b border-gray-200 relative z-10">
+					{hasQRCode ? (
+						<div className="flex items-center justify-center bg-linear-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200">
+							<QrCode size={20} className="mr-2 text-green-600" />
+							<span className="font-bold text-green-700 text-sm">QR CODE ACTIVE</span>
+						</div>
+					) : (
+						<div className="flex items-center justify-center bg-gray-50 rounded-lg p-3 border border-gray-200">
+							<QrCode size={20} className="mr-2 text-gray-400" />
+							<span className="font-semibold text-gray-500 text-sm">No QR Code</span>
+						</div>
+					)}
+				</div>
+
+				{/* Actions */}
+				<div className="flex gap-2 relative z-10">
+					<button
+						onClick={() => onEdit(table)}
+						className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
+					>
+						<Edit2 size={16} />
+						Edit
+					</button>
+
+					{hasQRCode ? (
+						<button
+							onClick={() => setShowQRModal(true)}
+						className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
+					>
+						<QrCode size={16} />
+						View QR
+					</button>
+				) : (
+					<button
+						onClick={handleGenerateQR}
+						disabled={loading}
+						className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+					>
+						<QrCode size={16} />
+						{loading ? "Generating..." : "Generate QR"}
+					{/* More Menu */}
+					<div className="relative">
+						<button
+							onClick={() => setShowMenu(!showMenu)}
+							className="p-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+						>
+							<MoreVertical size={20} className="text-gray-700" />
+						</button>
+
+						{showMenu && (
+							<>
+								<div
+									className="fixed inset-0 z-10"
+									onClick={() => setShowMenu(false)}
+								/>
+								<div className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 z-20 overflow-hidden">
+									{hasQRCode && (
+										<>
+											<button
+												onClick={() => {
+													handleDownloadPNG();
+													setShowMenu(false);
+												}}
+												className="w-full text-left px-4 py-3 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 flex items-center gap-3 transition-all duration-200 font-medium text-gray-700 hover:text-purple-700"
+											>
+												<div className="bg-blue-100 p-1.5 rounded-lg">
+													<Download size={16} className="text-blue-600" />
+												</div>
+												Download PNG
+											</button>
+											<button
+												onClick={() => {
+													handleDownloadPDF();
+													setShowMenu(false);
+												}}
+												className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+											>
+												<Download size={16} />
+												Download PDF
+											</button>
+											<button
+												onClick={() => {
+													handleRegenerateQR();
+													setShowMenu(false);
+												}}
+												className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-orange-600"
+											>
+												<RefreshCw size={16} />
+												Regenerate QR
+											</button>
+										</>
+									)}
+									<button
+										onClick={() => {
+											handleToggleStatus();
+											setShowMenu(false);
+										}}
+										className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${
+											table.status === "active"
+												? "text-red-600"
+												: "text-green-600"
+										}`}
+									>
+										<Power size={16} />
+										{table.status === "active"
+											? "Deactivate"
+											: "Activate"}
+									</button>
+								</div>
+							</>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{/* QR Code Modal */}
+			{showQRModal && (
+				<QRCodeModal
+					table={table}
+					onClose={() => setShowQRModal(false)}
+					onRegenerate={handleRegenerateQR}
+					onDownloadPNG={handleDownloadPNG}
+					onDownloadPDF={handleDownloadPDF}
+				/>
+			)}
+		</>
+	);
+};
+
+export default TableCard;

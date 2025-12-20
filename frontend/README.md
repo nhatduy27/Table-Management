@@ -1,16 +1,102 @@
-# React + Vite
+# Table Management Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend application for managing restaurant tables and QR codes.
 
-Currently, two official plugins are available:
+## Features Implemented
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. Table Management CRUD ✅
 
-## React Compiler
+-   ✅ Create new tables with validation
+-   ✅ View all tables in a grid layout
+-   ✅ Edit existing tables
+-   ✅ Update table status (Active/Inactive)
+-   ✅ Filter tables by status and location
+-   ✅ Sort tables by number, capacity, or creation date
+-   ✅ Search tables by name or location
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. QR Code Generation ✅
 
-## Expanding the ESLint configuration
+-   ✅ Generate unique QR codes for each table
+-   ✅ QR codes contain signed JWT tokens
+-   ✅ Display QR code preview in modal
+-   ✅ Show QR code creation timestamp
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 3. QR Code Download/Print ✅
+
+-   ✅ Download individual QR codes as PNG
+-   ✅ Download individual QR codes as PDF
+-   ✅ Batch download all QR codes as ZIP
+-   ✅ Batch download all QR codes as PDF
+
+### 4. QR Code Regeneration ✅
+
+-   ✅ Regenerate individual QR codes
+-   ✅ Bulk regenerate all QR codes
+-   ✅ Confirmation dialogs for safety
+
+### 5. Public Menu Page ✅
+
+-   ✅ QR code token verification
+-   ✅ Display table information
+-   ✅ User-friendly error messages
+
+## Tech Stack
+
+-   React 19 + Vite
+-   Tailwind CSS 4
+-   React Router DOM
+-   Axios, react-qr-code, file-saver, lucide-react
+
+## Getting Started
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Setup
+
+Create `.env` file:
+
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+Application available at http://localhost:5173
+
+## Project Structure
+
+```
+src/
+├── components/      # UI components (TableList, TableCard, TableForm, QRCodeModal)
+├── pages/          # Pages (MenuPage)
+├── utils/          # Utilities (api, downloadFile)
+├── App.jsx         # Main app with routing
+└── index.css       # Global styles
+```
+
+## API Integration
+
+Backend must be running on http://localhost:5000
+
+## Usage
+
+1. **Create Table**: Click "Create New Table", fill form, submit
+2. **Generate QR**: Click "Generate QR" on table without QR code
+3. **View QR**: Click "View QR" to see QR code and options
+4. **Download**: Use "..." menu or QR modal to download PNG/PDF
+5. **Regenerate**: Click "Regenerate" in QR modal (invalidates old code)
+
+## Build for Production
+
+```bash
+npm run build
+npm run preview
+```
