@@ -138,179 +138,190 @@ const TableList = () => {
 
 	if (loading) {
 		return (
-			<div className="flex items-center justify-center h-64">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+			<div className="min-h-screen flex items-center justify-center bg-gray-100">
+				<div className="text-center">
+					<div className="spinner mx-auto mb-4"></div>
+					<p className="text-gray-600">Loading tables...</p>
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 py-8">
-			{/* Header */}
-			<div className="mb-8">
-				<h1 className="text-3xl font-bold text-gray-900 mb-2">
-					Table Management
-				</h1>
-				<p className="text-gray-600">
-					Manage your restaurant tables and QR codes
-				</p>
-			</div>
-
-			{error && (
-				<div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					{error}
+		<div className="min-h-screen bg-gray-100">
+			<div className="max-w-6xl mx-auto px-4 py-8">
+				{/* Header */}
+				<div className="mb-8">
+					<h1 className="text-3xl font-bold text-gray-900 mb-2">
+						Table Management
+					</h1>
+					<p className="text-gray-600">
+						Manage your restaurant tables and QR codes
+					</p>
 				</div>
-			)}
 
-			{/* Actions Bar */}
-			<div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
-				<button
-					onClick={handleCreateTable}
-					className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-				>
-					<Plus size={20} />
-					Create New Table
-				</button>
+				{error && (
+					<div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+						{error}
+					</div>
+				)}
 
-				<div className="flex gap-2">
+				{/* Actions Bar */}
+				<div className="mb-6 flex flex-wrap gap-3 items-center justify-between">
 					<button
-						onClick={handleBulkRegenerate}
-						disabled={bulkRegenerating}
-						className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+						onClick={handleCreateTable}
+						className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium text-base"
 					>
-						<RefreshCw
-							size={20}
-							className={bulkRegenerating ? "animate-spin" : ""}
-						/>
-						{bulkRegenerating
-							? "Regenerating..."
-							: "Regenerate All QR"}
+						<Plus size={20} />
+						Create New Table
 					</button>
 
-					<div className="relative group">
+					<div className="flex gap-3">
 						<button
-							disabled={downloadingAll}
-							className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+							onClick={handleBulkRegenerate}
+							disabled={bulkRegenerating}
+							className="flex items-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 font-medium"
 						>
-							<Download size={20} />
-							{downloadingAll ? "Downloading..." : "Download All"}
+							<RefreshCw
+								size={18}
+								className={
+									bulkRegenerating ? "animate-spin" : ""
+								}
+							/>
+							{bulkRegenerating
+								? "Regenerating..."
+								: "Regenerate All QR"}
 						</button>
-						<div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 invisible group-hover:visible z-10">
+
+						<div className="relative group">
 							<button
-								onClick={() => handleDownloadAll("zip")}
-								className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+								disabled={downloadingAll}
+								className="flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-medium"
 							>
-								Download as ZIP
+								<Download size={18} />
+								{downloadingAll
+									? "Downloading..."
+									: "Download All"}
 							</button>
-							<button
-								onClick={() => handleDownloadAll("pdf")}
-								className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg"
-							>
-								Download as PDF
-							</button>
+							<div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 invisible group-hover:visible z-10">
+								<button
+									onClick={() => handleDownloadAll("zip")}
+									className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-t-lg font-medium"
+								>
+									Download as ZIP
+								</button>
+								<button
+									onClick={() => handleDownloadAll("pdf")}
+									className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-b-lg font-medium border-t border-gray-100"
+								>
+									Download as PDF
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Filters */}
-			<div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-				<div className="flex items-center gap-2 mb-4">
-					<Filter size={20} className="text-gray-500" />
-					<h2 className="font-semibold text-gray-700">Filters</h2>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-					{/* Search */}
-					<div className="relative">
-						<Search
-							size={20}
-							className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-						/>
-						<input
-							type="text"
-							placeholder="Search tables..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						/>
+				{/* Filters */}
+				<div className="mb-6 bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+					<div className="flex items-center gap-2 mb-4">
+						<Filter size={18} className="text-gray-500" />
+						<h2 className="font-semibold text-gray-700">Filters</h2>
 					</div>
 
-					{/* Status Filter */}
-					<select
-						value={statusFilter}
-						onChange={(e) => setStatusFilter(e.target.value)}
-						className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					>
-						<option value="all">All Status</option>
-						<option value="active">Active</option>
-						<option value="inactive">Inactive</option>
-					</select>
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+						{/* Search */}
+						<div className="relative">
+							<Search
+								size={18}
+								className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+							/>
+							<input
+								type="text"
+								placeholder="Search tables..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+							/>
+						</div>
 
-					{/* Location Filter */}
-					<select
-						value={locationFilter}
-						onChange={(e) => setLocationFilter(e.target.value)}
-						className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					>
-						<option value="all">All Locations</option>
-						{locations.map((location) => (
-							<option key={location} value={location}>
-								{location}
-							</option>
+						{/* Status Filter */}
+						<select
+							value={statusFilter}
+							onChange={(e) => setStatusFilter(e.target.value)}
+							className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+						>
+							<option value="all">All Status</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+						</select>
+
+						{/* Location Filter */}
+						<select
+							value={locationFilter}
+							onChange={(e) => setLocationFilter(e.target.value)}
+							className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+						>
+							<option value="all">All Locations</option>
+							{locations.map((location) => (
+								<option key={location} value={location}>
+									{location}
+								</option>
+							))}
+						</select>
+
+						{/* Sort By */}
+						<select
+							value={sortBy}
+							onChange={(e) => setSortBy(e.target.value)}
+							className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+						>
+							<option value="created_at">Newest First</option>
+							<option value="table_number">Table Number</option>
+							<option value="capacity">Capacity</option>
+						</select>
+					</div>
+				</div>
+
+				{/* Results Count */}
+				<div className="mb-4 text-sm text-gray-600">
+					Showing {filteredTables.length} of {tables.length} tables
+				</div>
+
+				{/* Tables Grid */}
+				{filteredTables.length === 0 ? (
+					<div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-200">
+						<p className="text-gray-500 text-lg mb-3">
+							No tables found
+						</p>
+						<button
+							onClick={handleCreateTable}
+							className="text-blue-600 hover:text-blue-700 font-medium"
+						>
+							Create your first table
+						</button>
+					</div>
+				) : (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{filteredTables.map((table) => (
+							<TableCard
+								key={table.id}
+								table={table}
+								onEdit={handleEditTable}
+								onRefresh={fetchTables}
+							/>
 						))}
-					</select>
+					</div>
+				)}
 
-					{/* Sort By */}
-					<select
-						value={sortBy}
-						onChange={(e) => setSortBy(e.target.value)}
-						className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					>
-						<option value="created_at">Newest First</option>
-						<option value="table_number">Table Number</option>
-						<option value="capacity">Capacity</option>
-					</select>
-				</div>
+				{/* Table Form Modal */}
+				{showForm && (
+					<TableForm
+						table={editingTable}
+						onClose={handleCloseForm}
+						onSuccess={handleFormSuccess}
+					/>
+				)}
 			</div>
-
-			{/* Results Count */}
-			<div className="mb-4 text-sm text-gray-600">
-				Showing {filteredTables.length} of {tables.length} tables
-			</div>
-
-			{/* Tables Grid */}
-			{filteredTables.length === 0 ? (
-				<div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
-					<p className="text-gray-500 text-lg">No tables found</p>
-					<button
-						onClick={handleCreateTable}
-						className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
-					>
-						Create your first table
-					</button>
-				</div>
-			) : (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{filteredTables.map((table) => (
-						<TableCard
-							key={table.id}
-							table={table}
-							onEdit={handleEditTable}
-							onRefresh={fetchTables}
-						/>
-					))}
-				</div>
-			)}
-
-			{/* Table Form Modal */}
-			{showForm && (
-				<TableForm
-					table={editingTable}
-					onClose={handleCloseForm}
-					onSuccess={handleFormSuccess}
-				/>
-			)}
 		</div>
 	);
 };

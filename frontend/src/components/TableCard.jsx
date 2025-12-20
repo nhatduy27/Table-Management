@@ -101,14 +101,14 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 
 	return (
 		<>
-			<div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition relative">
+			<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition relative">
 				{/* Status Badge */}
 				<div className="absolute top-4 right-4">
 					<span
 						className={`px-3 py-1 rounded-full text-xs font-semibold ${
 							table.status === "active"
 								? "bg-green-100 text-green-800"
-								: "bg-gray-100 text-gray-800"
+								: "bg-gray-100 text-gray-600"
 						}`}
 					>
 						{table.status}
@@ -116,7 +116,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 				</div>
 
 				{/* Table Number */}
-				<div className="mb-4">
+				<div className="mb-4 pr-20">
 					<h3 className="text-2xl font-bold text-gray-900">
 						{table.table_number}
 					</h3>
@@ -125,12 +125,12 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 				{/* Table Info */}
 				<div className="space-y-2 mb-4">
 					<div className="flex items-center text-gray-600">
-						<Users size={18} className="mr-2" />
-						<span>Capacity: {table.capacity} seats</span>
+						<Users size={18} className="mr-2 text-gray-400" />
+						<span>{table.capacity} seats</span>
 					</div>
 					{table.location && (
 						<div className="flex items-center text-gray-600">
-							<MapPin size={18} className="mr-2" />
+							<MapPin size={18} className="mr-2 text-gray-400" />
 							<span>{table.location}</span>
 						</div>
 					)}
@@ -162,7 +162,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 				<div className="flex gap-2">
 					<button
 						onClick={() => onEdit(table)}
-						className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+						className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
 					>
 						<Edit2 size={16} />
 						Edit
@@ -171,7 +171,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 					{hasQRCode ? (
 						<button
 							onClick={() => setShowQRModal(true)}
-							className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+							className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
 						>
 							<QrCode size={16} />
 							View QR
@@ -180,10 +180,10 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 						<button
 							onClick={handleGenerateQR}
 							disabled={loading}
-							className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+							className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-medium"
 						>
 							<QrCode size={16} />
-							{loading ? "Generating..." : "Generate QR"}
+							{loading ? "..." : "Generate QR"}
 						</button>
 					)}
 
@@ -191,9 +191,9 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 					<div className="relative">
 						<button
 							onClick={() => setShowMenu(!showMenu)}
-							className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+							className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
 						>
-							<MoreVertical size={20} />
+							<MoreVertical size={18} className="text-gray-500" />
 						</button>
 
 						{showMenu && (
@@ -210,7 +210,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 													handleDownloadPNG();
 													setShowMenu(false);
 												}}
-												className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+												className="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2"
 											>
 												<Download size={16} />
 												Download PNG
@@ -220,7 +220,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 													handleDownloadPDF();
 													setShowMenu(false);
 												}}
-												className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+												className="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100"
 											>
 												<Download size={16} />
 												Download PDF
@@ -230,7 +230,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 													handleRegenerateQR();
 													setShowMenu(false);
 												}}
-												className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-orange-600"
+												className="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2 text-orange-600 border-t border-gray-100"
 											>
 												<RefreshCw size={16} />
 												Regenerate QR
@@ -242,7 +242,7 @@ const TableCard = ({ table, onEdit, onRefresh }) => {
 											handleToggleStatus();
 											setShowMenu(false);
 										}}
-										className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${
+										className={`w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100 ${
 											table.status === "active"
 												? "text-red-600"
 												: "text-green-600"

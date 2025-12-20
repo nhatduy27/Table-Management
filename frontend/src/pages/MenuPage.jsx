@@ -54,10 +54,12 @@ const MenuPage = () => {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50">
+			<div className="min-h-screen flex items-center justify-center bg-gray-100">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-					<p className="text-gray-600">Verifying QR code...</p>
+					<div className="spinner mx-auto mb-4"></div>
+					<p className="text-gray-500 font-medium">
+						Verifying QR code...
+					</p>
 				</div>
 			</div>
 		);
@@ -65,19 +67,19 @@ const MenuPage = () => {
 
 	if (error) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-				<div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-					<div className="flex justify-center mb-4">
-						<div className="bg-red-100 p-4 rounded-full">
-							<AlertCircle size={48} className="text-red-600" />
+			<div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+				<div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+					<div className="flex justify-center mb-6">
+						<div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+							<AlertCircle size={40} className="text-red-500" />
 						</div>
 					</div>
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">
+					<h2 className="text-2xl font-bold text-red-600 mb-3">
 						Invalid QR Code
 					</h2>
 					<p className="text-gray-600 mb-6">{error}</p>
 					<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-						<p className="text-sm text-yellow-800">
+						<p className="text-sm text-yellow-800 font-medium">
 							Please ask a staff member for assistance or scan a
 							different QR code.
 						</p>
@@ -88,49 +90,54 @@ const MenuPage = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-linear-to-b from-blue-50 to-white p-4">
-			<div className="max-w-4xl mx-auto">
+		<div className="min-h-screen bg-gray-100 p-4 py-8">
+			<div className="max-w-2xl w-full mx-auto">
 				{/* Success Message */}
-				<div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 text-center">
 					<div className="flex items-center justify-center mb-6">
-						<div className="bg-green-100 p-4 rounded-full">
-							<CheckCircle size={48} className="text-green-600" />
+						<div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+							<CheckCircle size={40} className="text-green-500" />
 						</div>
 					</div>
-					<h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+					<h1 className="text-3xl font-bold text-gray-900 mb-3">
 						Welcome to Our Restaurant!
 					</h1>
-					<p className="text-center text-gray-600">
-						You're scanning from Table {tableInfo?.table_number}
+					<p className="text-gray-500">
+						You're scanning from Table{" "}
+						<span className="font-bold text-blue-600">
+							{tableInfo?.table_number}
+						</span>
 					</p>
 				</div>
 
 				{/* Table Information */}
-				<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-					<h2 className="text-xl font-bold text-gray-900 mb-4">
-						Table Information
+				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+					<h2 className="text-xl font-bold text-gray-800 mb-4">
+						📍 Table Information
 					</h2>
 					<div className="grid grid-cols-2 gap-4">
-						<div>
-							<p className="text-sm text-gray-600">
+						<div className="bg-gray-50 p-4 rounded-lg">
+							<p className="text-xs text-gray-500 font-medium mb-1">
 								Table Number
 							</p>
-							<p className="font-semibold text-gray-900">
+							<p className="font-bold text-gray-900 text-lg">
 								{tableInfo?.table_number}
 							</p>
 						</div>
-						<div>
-							<p className="text-sm text-gray-600">Capacity</p>
-							<p className="font-semibold text-gray-900">
+						<div className="bg-gray-50 p-4 rounded-lg">
+							<p className="text-xs text-gray-500 font-medium mb-1">
+								Capacity
+							</p>
+							<p className="font-bold text-gray-900 text-lg">
 								{tableInfo?.capacity} seats
 							</p>
 						</div>
 						{tableInfo?.location && (
-							<div>
-								<p className="text-sm text-gray-600">
+							<div className="bg-gray-50 p-4 rounded-lg col-span-2">
+								<p className="text-xs text-gray-500 font-medium mb-1">
 									Location
 								</p>
-								<p className="font-semibold text-gray-900">
+								<p className="font-bold text-gray-900 text-lg">
 									{tableInfo.location}
 								</p>
 							</div>
@@ -139,16 +146,19 @@ const MenuPage = () => {
 				</div>
 
 				{/* Menu Placeholder */}
-				<div className="bg-white rounded-lg shadow-lg p-8 text-center">
-					<h2 className="text-2xl font-bold text-gray-900 mb-4">
+				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+					<div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span className="text-2xl">🍽️</span>
+					</div>
+					<h2 className="text-2xl font-bold text-gray-800 mb-3">
 						Menu
 					</h2>
-					<p className="text-gray-600 mb-6">
+					<p className="text-gray-500 mb-6">
 						The menu functionality will be implemented in future
 						modules.
 					</p>
-					<div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-						<p className="text-blue-800">
+					<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+						<p className="text-blue-700 font-medium">
 							This page verifies that your QR code is working
 							correctly! 🎉
 						</p>
@@ -156,8 +166,10 @@ const MenuPage = () => {
 				</div>
 
 				{/* Footer */}
-				<div className="mt-8 text-center text-sm text-gray-500">
-					<p>Thank you for choosing our restaurant!</p>
+				<div className="mt-8 text-center">
+					<p className="text-gray-400 text-sm font-medium">
+						Thank you for choosing our restaurant! ❤️
+					</p>
 				</div>
 			</div>
 		</div>
