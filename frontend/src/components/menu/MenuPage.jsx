@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Loading from "../common/Loading";
 import Alert from "../common/Alert";
+import tableService from "../../services/tableService";
 
 const MenuPage = () => {
 	const [searchParams] = useSearchParams();
@@ -12,19 +13,37 @@ const MenuPage = () => {
 	const [tableInfo, setTableInfo] = useState(null);
 
 	useEffect(() => {
-		// Simulate verification and loading
-		setTimeout(() => {
+		const verifyQRCode = async () => {
 			if (!tableId || !token) {
 				setError("Invalid QR code. Missing table or token.");
-			} else {
-				// In a real app, you would verify the token with the backend
-				setTableInfo({
-					table_number: tableId,
-					verified: true,
-				});
+				setLoading(false);
+				return;
 			}
-			setLoading(false);
-		}, 1000);
+
+			try {
+				// Verify QR token with backend
+				const response = await tableService.verifyQRToken(
+					tableId,
+					token
+				);
+
+				if (response.success) {
+					setTableInfo(response.data.table);
+				} else {
+					setError(response.message || "Invalid QR code");
+				}
+			} catch (err) {
+				console.error("QR verification error:", err);
+				setError(
+					err.message ||
+						"This QR code is no longer valid. Please ask staff for assistance."
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		verifyQRCode();
 	}, [tableId, token]);
 
 	if (loading) {

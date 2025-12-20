@@ -1,4 +1,5 @@
 import api from "../config/api";
+import axios from "axios";
 
 const tableService = {
 	// Get all tables
@@ -72,6 +73,18 @@ const tableService = {
 		const response = await api.get("/tables/qr/download-all", {
 			params: { format },
 			responseType: "blob",
+		});
+		return response.data;
+	},
+
+	// Verify QR code token
+	verifyQRToken: async (tableId, token) => {
+		// Note: verify endpoint is at /api/menu (public route), not /api/admin
+		const baseUrl =
+			import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+		const cleanBaseUrl = baseUrl.replace("/admin", ""); // Remove /admin if present
+		const response = await axios.get(`${cleanBaseUrl}/menu`, {
+			params: { table: tableId, token },
 		});
 		return response.data;
 	},
