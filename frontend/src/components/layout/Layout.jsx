@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Outlet } from "react-router-dom";
 
 const Layout = ({ children }) => {
 	const location = useLocation();
@@ -97,7 +97,9 @@ const Layout = ({ children }) => {
 			</nav>
 
 			{/* Main Content */}
-			<main className="min-h-[calc(100vh-4rem)]">{children}</main>
+			<main className="min-h-[calc(100vh-4rem)]">
+				<Outlet />
+			</main>
 
 			{/* Footer */}
 			<footer className="bg-white border-t mt-auto">

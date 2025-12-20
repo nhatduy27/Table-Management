@@ -9,13 +9,18 @@ import Layout from "./components/layout/Layout";
 import TableList from "./components/tables/TableList";
 import TableForm from "./components/tables/TableForm";
 import QRCodePage from "./components/tables/QRCodePage";
+import MenuPage from "./components/menu/MenuPage";
 import "./App.css";
 
 function App() {
 	return (
 		<Router>
-			<Layout>
-				<Routes>
+			<Routes>
+				{/* Customer-facing menu route (no layout) */}
+				<Route path="/menu" element={<MenuPage />} />
+
+				{/* Admin routes with layout */}
+				<Route element={<Layout />}>
 					{/* Redirect root to tables */}
 					<Route
 						path="/"
@@ -48,8 +53,8 @@ function App() {
 							</div>
 						}
 					/>
-				</Routes>
-			</Layout>
+				</Route>
+			</Routes>
 		</Router>
 	);
 }
