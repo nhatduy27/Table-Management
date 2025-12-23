@@ -49,6 +49,7 @@ MenuItemPhoto.associate = (models) => {
   MenuItemPhoto.belongsTo(models.MenuItem, {
     foreignKey: 'menu_item_id',
     as: 'menuItem',
+    onDelete: 'CASCADE'
   });
 };
 
