@@ -14,6 +14,14 @@ import {
   deleteItem,
 } from '../controllers/item.controller.js';
 
+import { 
+  createModifierGroup,
+  updateModifierGroup,
+  createModifierOption,
+  updateModifierOption,
+  attachModifierGroup
+} from '../controllers/modifier.controller.js';
+
 const router = express.Router();
 
 // ============= Category CRUD Routes =============
@@ -48,6 +56,20 @@ router.put('/items/:id', updateItem);
 // DELETE	/api/admin/menu/items/:id
 router.delete('/items/:id', deleteItem);
 
+// ============= Modifier Routes =============
+//POST	/api/admin/menu/modifier-groups
+router.post('/modifier-groups', createModifierGroup);
 
+// POST	/api/admin/menu/modifier-groups/:id/options
+router.post('/modifier-groups/:id/options', createModifierOption);
+
+//PUT	/api/admin/menu/modifier-groups/:id
+router.put('/modifier-groups/:id', updateModifierGroup);
+
+//PUT	/api/admin/menu/modifier-options/:id
+router.put('/modifier-options/:id', updateModifierOption);
+
+//POST	/api/admin/menu/items/:id/modifier-groups
+router.post('/items/:id/modifier-groups', attachModifierGroup);
 
 export default router;
