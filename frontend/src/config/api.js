@@ -1,53 +1,64 @@
+// src/config/api.js (hoặc apiConfig.js)
 import axios from "axios";
 
 const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/admin";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-const api = axios.create({
-	baseURL: API_BASE_URL,
-	headers: {
-		"Content-Type": "application/json",
-	},
+const adminApi = axios.create({
+  baseURL: `${API_BASE_URL}/admin`,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Request interceptor for adding auth token if needed
-api.interceptors.request.use(
-	(config) => {
-		// Add auth token here when authentication is implemented
-		// const token = localStorage.getItem('authToken');
-		// if (token) {
-		//   config.headers.Authorization = `Bearer ${token}`;
-		// }
-		return config;
-	},
-	(error) => {
-		return Promise.reject(error);
-	}
-);
+// Public API (không cần /admin prefix)
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-// Response interceptor for error handling
-api.interceptors.response.use(
-	(response) => response,
-	(error) => {
-		if (error.response) {
-			// Server responded with error status
-			const message =
-				error.response.data?.message ||
-				error.response.data?.error ||
-				"An error occurred";
-			return Promise.reject(new Error(message));
-		} else if (error.request) {
-			// Request was made but no response
-			return Promise.reject(
-				new Error(
-					"No response from server. Please check your connection."
-				)
-			);
-		} else {
-			// Something else happened
-			return Promise.reject(error);
-		}
-	}
-);
+// Interceptor chung
+const setupInterceptors = (instance) => {
+  // Request interceptor
+  instance.interceptors.request.use(
+    (config) => {
+      // Add auth token here when authentication is implemented
+      // const token = localStorage.getItem('authToken');
+      // if (token) {
+      //   config.headers.Authorization = `Bearer ${token}`;
+      // }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
 
-export default api;
+  // Response interceptor
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response) {
+        const message =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          "An error occurred";
+        return Promise.reject(new Error(message));
+      } else if (error.request) {
+        return Promise.reject(
+          new Error("No response from server. Please check your connection.")
+        );
+      } else {
+        return Promise.reject(error);
+      }
+    }
+  );
+};
+
+// Áp dụng interceptors cho cả hai instances
+setupInterceptors(adminApi);
+setupInterceptors(publicApi);
+
+export { adminApi, publicApi };

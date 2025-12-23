@@ -1,151 +1,147 @@
-import api from "../config/api";
-import axios from "axios";
+// src/services/tableService.js
+import { adminApi, publicApi } from "../config/api";
 
 const tableService = {
-	// Get all tables
-	getAllTables: async () => {
-		const response = await api.get("/tables");
-		return response.data;
-	},
+  // Get all tables
+  getAllTables: async () => {
+    const response = await adminApi.get("/tables");
+    return response.data;
+  },
 
-	// Get table by ID
-	getTableById: async (id) => {
-		const response = await api.get(`/tables/${id}`);
-		return response.data;
-	},
+  // Get table by ID
+  getTableById: async (id) => {
+    const response = await adminApi.get(`/tables/${id}`);
+    return response.data;
+  },
 
-	// Create new table
-	createTable: async (tableData) => {
-		const response = await api.post("/tables", tableData);
-		return response.data;
-	},
+  // Create new table
+  createTable: async (tableData) => {
+    const response = await adminApi.post("/tables", tableData);
+    return response.data;
+  },
 
-	// Update table
-	updateTable: async (id, tableData) => {
-		const response = await api.put(`/tables/${id}`, tableData);
-		return response.data;
-	},
+  // Update table
+  updateTable: async (id, tableData) => {
+    const response = await adminApi.put(`/tables/${id}`, tableData);
+    return response.data;
+  },
 
-	// Update table status
-	updateTableStatus: async (id, status) => {
-		const response = await api.patch(`/tables/${id}/status`, { status });
-		return response.data;
-	},
+  // Update table status
+  updateTableStatus: async (id, status) => {
+    const response = await adminApi.patch(`/tables/${id}/status`, { status });
+    return response.data;
+  },
 
-	// QR Code operations
-	// Generate QR code for a table
-	generateQRCode: async (id) => {
-		const response = await api.post(`/tables/${id}/qr/generate`);
-		return response.data;
-	},
+  // Delete table
+  deleteTable: async (id) => {
+    const response = await adminApi.delete(`/tables/${id}`);
+    return response.data;
+  },
 
-	// Regenerate QR code (invalidate old)
-	regenerateQRCode: async (id) => {
-		const response = await api.post(`/tables/${id}/qr/regenerate`);
-		return response.data;
-	},
+  // QR Code operations
+  generateQRCode: async (id) => {
+    const response = await adminApi.post(`/tables/${id}/qr/generate`);
+    return response.data;
+  },
 
-	// Bulk regenerate QR codes
-	bulkRegenerateQRCodes: async (tableIds = null) => {
-		const response = await api.post("/tables/qr/regenerate-all", {
-			table_ids: tableIds,
-		});
-		return response.data;
-	},
+  regenerateQRCode: async (id) => {
+    const response = await adminApi.post(`/tables/${id}/qr/regenerate`);
+    return response.data;
+  },
 
-	// Get QR code preview
-	getQRPreview: async (id) => {
-		const response = await api.get(`/tables/${id}/qr/preview`);
-		return response.data;
-	},
+  bulkRegenerateQRCodes: async (tableIds = null) => {
+    const response = await adminApi.post("/tables/qr/regenerate-all", {
+      table_ids: tableIds,
+    });
+    return response.data;
+  },
 
-	// Download QR code (PNG or PDF)
-	downloadQRCode: async (id, format = "png") => {
-		const response = await api.get(`/tables/${id}/qr/download`, {
-			params: { format },
-			responseType: "blob",
-		});
-		return response.data;
-	},
+  getQRPreview: async (id) => {
+    const response = await adminApi.get(`/tables/${id}/qr/preview`);
+    return response.data;
+  },
 
-	// Download all QR codes (ZIP or PDF)
-	downloadAllQRCodes: async (format = "zip") => {
-		const response = await api.get("/tables/qr/download-all", {
-			params: { format },
-			responseType: "blob",
-		});
-		return response.data;
-	},
+  downloadQRCode: async (id, format = "png") => {
+    const response = await adminApi.get(`/tables/${id}/qr/download`, {
+      params: { format },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 
-	// Verify QR code token
-	verifyQRToken: async (tableId, token) => {
-		// Note: verify endpoint is at /api/menu (public route), not /api/admin
-		const baseUrl =
-			import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-		const cleanBaseUrl = baseUrl.replace("/admin", ""); // Remove /admin if present
-		const response = await axios.get(`${cleanBaseUrl}/menu`, {
-			params: { table: tableId, token },
-		});
-		return response.data;
-	},
+  downloadAllQRCodes: async (format = "zip") => {
+    const response = await adminApi.get("/tables/qr/download-all", {
+      params: { format },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 
-	// Filter tables by status, location, and search
-	filterTables: (tables, filters) => {
-		let filtered = [...tables];
+  // Verify QR code token (public endpoint)
+  verifyQRToken: async (tableId, token) => {
+    const response = await publicApi.get("/menu", {
+      params: { table: tableId, token },
+    });
+    return response.data;
+  },
 
-		if (filters.status && filters.status !== "all") {
-			filtered = filtered.filter(
-				(table) => table.status === filters.status
-			);
-		}
+  // Filter tables by status, location, and search (client-side)
+  filterTables: (tables, filters) => {
+    let filtered = [...tables];
 
-		if (filters.location && filters.location !== "all") {
-			filtered = filtered.filter(
-				(table) => table.location === filters.location
-			);
-		}
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter(
+        (table) => table.status === filters.status
+      );
+    }
 
-		if (filters.search) {
-			const searchLower = filters.search.toLowerCase();
-			filtered = filtered.filter(
-				(table) =>
-					table.table_number.toLowerCase().includes(searchLower) ||
-					(table.location &&
-						table.location.toLowerCase().includes(searchLower)) ||
-					(table.description &&
-						table.description.toLowerCase().includes(searchLower))
-			);
-		}
+    if (filters.location && filters.location !== "all") {
+      filtered = filtered.filter(
+        (table) => table.location === filters.location
+      );
+    }
 
-		return filtered;
-	},
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (table) =>
+          table.table_number.toLowerCase().includes(searchLower) ||
+          (table.location &&
+            table.location.toLowerCase().includes(searchLower)) ||
+          (table.description &&
+            table.description.toLowerCase().includes(searchLower))
+      );
+    }
 
-	sortTables: (tables, sortBy, sortOrder = "asc") => {
-		return [...tables].sort((a, b) => {
-			let aVal, bVal;
+    return filtered;
+  },
 
-			switch (sortBy) {
-				case "table_number":
-					aVal = a.table_number;
-					bVal = b.table_number;
-					break;
-				case "capacity":
-					aVal = a.capacity;
-					bVal = b.capacity;
-					break;
-				case "created_at":
-					aVal = new Date(a.created_at);
-					bVal = new Date(b.created_at);
-					break;
-				default:
-					return 0;
-			}
+  sortTables: (tables, sortBy, sortOrder = "asc") => {
+    return [...tables].sort((a, b) => {
+      let aVal, bVal;
 
-			if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
-			if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
-			return 0;
-		});
-	},
+      switch (sortBy) {
+        case "table_number":
+          aVal = a.table_number;
+          bVal = b.table_number;
+          break;
+        case "capacity":
+          aVal = a.capacity;
+          bVal = b.capacity;
+          break;
+        case "created_at":
+          aVal = new Date(a.created_at);
+          bVal = new Date(b.created_at);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  },
 };
 
 export default tableService;

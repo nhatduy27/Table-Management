@@ -1,6 +1,8 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
 
+
+
 class Table extends Model {}
 
 Table.init(
@@ -9,6 +11,15 @@ Table.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+
+    restaurant_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'restaurants',
+        key: 'id',
+      },
     },
     table_number: {
       type: DataTypes.STRING(50),
@@ -32,10 +43,10 @@ Table.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.STRING(20),  // Đổi từ ENUM sang STRING
+      type: DataTypes.STRING(20), 
       defaultValue: 'active',
       validate: {
-        isIn: [['active', 'inactive']]  // Vẫn validate giá trị
+        isIn: [['active', 'inactive']]  
       }
     },
     qr_token: {

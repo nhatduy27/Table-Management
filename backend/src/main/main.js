@@ -1,10 +1,21 @@
+// src/main.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import sequelize from '../config/database.js';
 import tableRoutes from '../routes/table.routes.js'; 
+import menuRoutes from '../routes/menu.routes.js'; 
 
-dotenv.config(); //Load biến môi trường từ .env
+//IMPORT CÁC MODELS
+import Restaurant from '../models/restaurant.js';
+import MenuCategory from '../models/menuCategory.js';
+import MenuItem from '../models/menuItem.js';
+import ModifierGroup from '../models/modifierGroup.js';
+import ModifierOption from '../models/modifierOption.js';
+import MenuItemPhoto from '../models/menuItemPhoto.js';
+import MenuItemModifierGroup from '../models/menuItemModifierGroup.js';
+import Table from '../models/table.js'; 
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000; 
@@ -14,10 +25,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', tableRoutes); // Main API routes (includes /api/menu for public access)
-app.use('/api/admin', tableRoutes); // Admin routes
+app.use('/api/admin/tables', tableRoutes);
+app.use('/api/admin/menu', menuRoutes);
 
-// Hàm check xem kết nối database có thành công không (chỉ dùng để test thôi nha anh em)
+// Test routes
 app.get('/connected', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -26,20 +37,47 @@ app.get('/connected', (req, res) => {
   });
 });
 
+// ✅ HÀM ĐỂ SETUP ASSOCIATIONS
+const setupAssociations = () => {
+  console.log('Setting up model associations...');
+  
+  // Tạo object chứa tất cả models
+  const models = {
+    Restaurant,
+    MenuCategory,
+    MenuItem,
+    ModifierGroup,
+    ModifierOption,
+    MenuItemPhoto,
+    MenuItemModifierGroup,
+    Table // Thêm nếu có
+  };
+  
+  // Gọi hàm associate cho từng model
+  Object.values(models).forEach(model => {
+    if (typeof model.associate === 'function') {
+      console.log(`  - Associating ${model.name}...`);
+      model.associate(models);
+    }
+  });
+  
+  console.log('✅ All associations set up successfully!');
+};
+
 // Start server
 async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('>>> Database connected successfully');
     
+    // ✅ GỌI HÀM SETUP ASSOCIATIONS TRƯỚC KHI SYNC
+    setupAssociations();
+    
     await sequelize.sync({ alter: true });
     console.log('>>> Database synced');
     
     app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Connected check: http://localhost:${PORT}/connected`);
-      console.log(`Tables API: http://localhost:${PORT}/api/admin/tables`);
+      console.log(`>>> Server running at http://localhost:${PORT}`);
     });
     
   } catch (error) {

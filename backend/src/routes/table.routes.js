@@ -20,38 +20,38 @@ const router = express.Router();
 
 // ============= Table CRUD Routes =============
 // GET /api/tables
-router.get('/tables', getAllTable);
+router.get('/', getAllTable);
 
 // GET /api/tables/:id
-router.get('/tables/:id', getTableById);
+router.get('/:id', getTableById);
 
 // POST /api/tables
-router.post('/tables', createTable);
+router.post('/', createTable);
 
 //PUT	/api/admin/tables/:id
-router.put('/tables/:id', updateTable);
+router.put('/:id', updateTable);
 
 //PATCH	/api/admin/tables/:id/status
-router.patch('/tables/:id/status', updateTableStatus);
+router.patch('/:id/status', updateTableStatus);
 
 // ============= QR Code Routes =============
 // POST /api/admin/tables/:id/qr/generate - Generate/Regenerate QR code
-router.post('/tables/:id/qr/generate', generateQRCode);
+router.post('/:id/qr/generate', generateQRCode);
 
 // POST /api/admin/tables/:id/qr/regenerate - Regenerate QR code (invalidate old)
-router.post('/tables/:id/qr/regenerate', regenerateQRCode);
+router.post('/:id/qr/regenerate', regenerateQRCode);
 
 // POST /api/admin/tables/qr/regenerate-all - Bulk regenerate all QR codes
-router.post('/tables/qr/regenerate-all', bulkRegenerateQRCodes);
+router.post('/qr/regenerate-all', bulkRegenerateQRCodes);
 
 // GET /api/admin/tables/:id/qr/download - Download QR code (PNG or PDF)
-router.get('/tables/:id/qr/download', downloadQRCode);
+router.get('/:id/qr/download', downloadQRCode);
 
 // GET /api/admin/tables/qr/download-all - Download all QR codes (ZIP or PDF)
-router.get('/tables/qr/download-all', downloadAllQRCodes);
+router.get('/qr/download-all', downloadAllQRCodes);
 
 // GET /api/admin/tables/:id/qr/preview - Get QR code preview
-router.get('/tables/:id/qr/preview', getQRPreview);
+router.get('/:id/qr/preview', getQRPreview);
 
 // ============= Public Routes (Customer) =============
 // GET /api/menu - Verify QR token and load menu
