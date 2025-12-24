@@ -1,6 +1,7 @@
 import ModifierGroup from "../models/modifierGroup.js";
 import ModifierOption from "../models/modifierOption.js";
 import MenuItemModifierGroup from "../models/menuItemModifierGroup.js";
+import MenuItem from "../models/menuItem.js";
 import { Op } from "sequelize";
 
 export class ModifierService {
@@ -53,6 +54,12 @@ export class ModifierService {
 	}
 
 	static async createOption(groupId, data) {
+		// Kiểm tra group tồn tại
+		const group = await ModifierGroup.findByPk(groupId);
+		if (!group) {
+			throw new Error("Modifier group not found");
+		}
+
 		//Check for existed option
 		const existingOption = await ModifierOption.findOne({
 			where: {
@@ -98,6 +105,12 @@ export class ModifierService {
 	}
 
 	static async attachGroupsToItem(menuItemId, groupIds) {
+		// Kiểm tra menu item tồn tại (defaultScope tự động filter is_deleted = false)
+		const menuItem = await MenuItem.findByPk(menuItemId);
+		if (!menuItem) {
+			throw new Error("Menu item not found");
+		}
+
 		// Xóa các liên kết cũ
 		await MenuItemModifierGroup.destroy({
 			where: { menu_item_id: menuItemId },
@@ -106,6 +119,20 @@ export class ModifierService {
 		// Nếu groupIds rỗng => chỉ detach tất cả
 		if (!groupIds || groupIds.length === 0) {
 			return [];
+		}
+
+		// Kiểm tra tất cả groups tồn tại và cùng restaurant với menu item
+		const groups = await ModifierGroup.findAll({
+			where: {
+				id: groupIds,
+				restaurant_id: menuItem.restaurant_id,
+			},
+		});
+
+		if (groups.length !== groupIds.length) {
+			throw new Error(
+				"Some modifier groups not found or belong to different restaurant"
+			);
 		}
 
 		// Tạo các liên kết mới

@@ -11,8 +11,6 @@ export const baseModifierOptionSchema = {
 
 //create (POST)
 export const createModifierOptionSchema = Joi.object({
-	group_id: Joi.string().uuid().required(),
-
 	name: baseModifierOptionSchema.name.required(),
 
 	price_adjustment: baseModifierOptionSchema.price_adjustment.default(0),
