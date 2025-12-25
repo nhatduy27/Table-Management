@@ -15,7 +15,7 @@ export class QRService {
 	 * @param {string} restaurantId - ID của nhà hàng (optional)
 	 * @returns {string} - JWT token
 	 */
-	static generateToken(tableId, restaurantId = "default-restaurant") {
+	static generateToken(tableId) {
 		const secret = process.env.JWT_SECRET || "your-secret-key-change-this";
 		const expiresIn = process.env.QR_TOKEN_EXPIRES || "365d"; // Token có thể dùng lâu dài
 

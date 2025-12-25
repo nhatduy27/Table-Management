@@ -39,7 +39,6 @@ export class ModifierService {
 		const existingGroupName = await ModifierGroup.findOne({
 			where: {
 				name: data.name,
-				restaurant_id: foundGroup.restaurant_id, //different restaurants
 				id: { [Op.ne]: id },
 			},
 		});
@@ -123,7 +122,6 @@ export class ModifierService {
 		const groups = await ModifierGroup.findAll({
 			where: {
 				id: groupIds,
-				restaurant_id: menuItem.restaurant_id,
 			},
 		});
 
