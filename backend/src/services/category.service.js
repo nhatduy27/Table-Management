@@ -53,7 +53,7 @@ export class CategoryService {
   }
 
   
-  static async validateUpdateData(categoryId, data, restaurantId = null) {
+  static async validateUpdateData(categoryId, data) {
     const errors = this.validateCategoryData(data, true); // isUpdate = true
     
     try {
@@ -117,7 +117,7 @@ export class CategoryService {
     return errors;
   }
   
-  static async update(categoryId, data, restaurantId = null) {
+  static async update(categoryId, data) {
     
     // Tìm category
     const where = { id: categoryId };
@@ -198,7 +198,7 @@ export class CategoryService {
 
 
  //CẬP NHẬT STATUS CHO CATEGORY
-  static async validateStatusUpdate(categoryId, newStatus, restaurantId = null) {
+  static async validateStatusUpdate(categoryId, newStatus) {
     const errors = [];
     
     try {
@@ -245,9 +245,9 @@ export class CategoryService {
   }
   
   // UPDATE STATUS
-  static async updateStatus(categoryId, newStatus, restaurantId = null) {
+  static async updateStatus(categoryId, newStatus) {
     // Validate
-    const validationErrors = await this.validateStatusUpdate(categoryId, newStatus, restaurantId);
+    const validationErrors = await this.validateStatusUpdate(categoryId, newStatus);
     
     if (validationErrors.length > 0) {
       throw new Error(`Status update validation failed: ${validationErrors.join(', ')}`);

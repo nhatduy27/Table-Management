@@ -12,7 +12,6 @@ export class QRService {
 	/**
 	 * Tạo signed token cho table
 	 * @param {string} tableId - ID của bàn
-	 * @param {string} restaurantId - ID của nhà hàng (optional)
 	 * @returns {string} - JWT token
 	 */
 	static generateToken(tableId) {
@@ -21,7 +20,6 @@ export class QRService {
 
 		const payload = {
 			tableId,
-			restaurantId,
 			timestamp: Date.now(),
 			type: "qr_table_access",
 		};
