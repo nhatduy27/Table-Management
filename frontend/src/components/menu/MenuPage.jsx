@@ -17,6 +17,7 @@ const MenuPage = () => {
 	const [activeCategory, setActiveCategory] = useState(null);
 	const [cart, setCart] = useState([]);
 	const [cartTotal, setCartTotal] = useState(0);
+	const [isCartOpen, setIsCartOpen] = useState(false);
 
 	useEffect(() => {
 		const verifyQRCode = async () => {
@@ -123,6 +124,12 @@ const MenuPage = () => {
 		}
 	}, [tableInfo]);
 
+	// Update cart total whenever cart changes
+	useEffect(() => {
+		const total = cart.reduce((sum, item) => sum + item.total, 0);
+		setCartTotal(total);
+	}, [cart]);
+
 	const addToCart = (item) => {
 		const existingItemIndex = cart.findIndex(
 			(cartItem) => cartItem.id === item.id
@@ -147,15 +154,11 @@ const MenuPage = () => {
 			};
 			setCart([...cart, cartItem]);
 		}
-
-		// Update cart total
-		updateCartTotal();
 	};
 
 	const removeFromCart = (itemId) => {
 		const updatedCart = cart.filter((item) => item.id !== itemId);
 		setCart(updatedCart);
-		updateCartTotal();
 	};
 
 	const updateQuantity = (itemId, newQuantity) => {
@@ -176,12 +179,6 @@ const MenuPage = () => {
 		});
 
 		setCart(updatedCart);
-		updateCartTotal();
-	};
-
-	const updateCartTotal = () => {
-		const total = cart.reduce((sum, item) => sum + item.total, 0);
-		setCartTotal(total);
 	};
 
 	const handlePlaceOrder = () => {
@@ -192,7 +189,6 @@ const MenuPage = () => {
 
 		const orderData = {
 			table_id: tableInfo.id,
-			restaurant_id: tableInfo.restaurant_id,
 			items: cart.map((item) => ({
 				menu_item_id: item.id,
 				quantity: item.quantity,
@@ -258,7 +254,7 @@ const MenuPage = () => {
 	);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+		<div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
 			{/* Header */}
 			<header className="bg-white shadow-sm sticky top-0 z-10">
 				<div className="container mx-auto px-4 py-4">
@@ -393,7 +389,7 @@ const MenuPage = () => {
 																)}
 															</div>
 															{item.is_chef_recommended && (
-																<span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium ml-2 flex-shrink-0">
+																<span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium ml-2 shrink-0">
 																	<svg
 																		className="w-3 h-3"
 																		fill="currentColor"
@@ -526,143 +522,181 @@ const MenuPage = () => {
 				)}
 
 				{/* Cart Sidebar */}
-				{cart.length > 0 && (
-					<div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:absolute md:right-4 md:top-4 md:bottom-auto md:w-80 z-20">
-						<div className="p-4">
-							<div className="flex items-center justify-between mb-4">
-								<h3 className="text-lg font-bold text-gray-900">
-									Your Order
-								</h3>
-								<button
-									onClick={() => setCart([])}
-									className="text-sm text-red-600 hover:text-red-800"
-								>
-									Clear All
-								</button>
-							</div>
-
-							<div className="max-h-60 overflow-y-auto mb-4">
-								{cart.map((item) => (
-									<div
-										key={item.id}
-										className="flex items-center justify-between py-3 border-b border-gray-100"
+				{isCartOpen && cart.length > 0 && (
+					<>
+						{/* Backdrop - semi-transparent */}
+						<div
+							className="fixed inset-0 bg-black/20 z-30"
+							onClick={() => setIsCartOpen(false)}
+						/>
+						<div className="fixed bottom-0 left-0 right-0 md:right-4 md:bottom-4 md:left-auto md:w-96 bg-white shadow-2xl rounded-t-2xl md:rounded-2xl z-40 max-h-[80vh] overflow-hidden">
+							<div className="p-4">
+								<div className="flex items-center justify-between mb-4">
+									<h3 className="text-lg font-bold text-gray-900">
+										Your Order (
+										{cart.reduce(
+											(sum, item) => sum + item.quantity,
+											0
+										)}{" "}
+										items)
+									</h3>
+									<button
+										onClick={() => setIsCartOpen(false)}
+										className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
 									>
-										<div className="flex-1">
-											<p className="font-medium text-gray-900">
-												{item.name}
-											</p>
-											<p className="text-sm text-gray-600">
-												${item.price.toFixed(2)} each
-											</p>
-										</div>
+										<svg
+											className="w-6 h-6"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M6 18L18 6M6 6l12 12"
+											/>
+										</svg>
+									</button>
+								</div>
 
-										<div className="flex items-center gap-2">
-											<div className="flex items-center border border-gray-300 rounded">
-												<button
-													onClick={() =>
-														updateQuantity(
-															item.id,
-															item.quantity - 1
-														)
-													}
-													className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-												>
-													-
-												</button>
-												<span className="px-3 py-1 text-gray-900">
-													{item.quantity}
+								<div className="max-h-60 overflow-y-auto mb-4">
+									{cart.map((item) => (
+										<div
+											key={item.id}
+											className="flex items-center justify-between py-3 border-b border-gray-100"
+										>
+											<div className="flex-1">
+												<p className="font-medium text-gray-900">
+													{item.name}
+												</p>
+												<p className="text-sm text-gray-600">
+													${item.price.toFixed(2)}{" "}
+													each
+												</p>
+											</div>
+
+											<div className="flex items-center gap-2">
+												<div className="flex items-center border border-gray-300 rounded">
+													<button
+														onClick={() =>
+															updateQuantity(
+																item.id,
+																item.quantity -
+																	1
+															)
+														}
+														className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+													>
+														-
+													</button>
+													<span className="px-3 py-1 text-gray-900">
+														{item.quantity}
+													</span>
+													<button
+														onClick={() =>
+															updateQuantity(
+																item.id,
+																item.quantity +
+																	1
+															)
+														}
+														className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+													>
+														+
+													</button>
+												</div>
+												<span className="font-medium text-gray-900 w-16 text-right">
+													${item.total.toFixed(2)}
 												</span>
 												<button
 													onClick={() =>
-														updateQuantity(
-															item.id,
-															item.quantity + 1
-														)
+														removeFromCart(item.id)
 													}
-													className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+													className="text-red-500 hover:text-red-700 ml-2"
 												>
-													+
+													<svg
+														className="w-5 h-5"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth={2}
+															d="M6 18L18 6M6 6l12 12"
+														/>
+													</svg>
 												</button>
 											</div>
-											<span className="font-medium text-gray-900 w-16 text-right">
-												${item.total.toFixed(2)}
-											</span>
-											<button
-												onClick={() =>
-													removeFromCart(item.id)
-												}
-												className="text-red-500 hover:text-red-700 ml-2"
-											>
-												<svg
-													className="w-5 h-5"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke="currentColor"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2}
-														d="M6 18L18 6M6 6l12 12"
-													/>
-												</svg>
-											</button>
 										</div>
-									</div>
-								))}
-							</div>
-
-							<div className="border-t border-gray-200 pt-4">
-								<div className="flex justify-between items-center mb-4">
-									<span className="text-lg font-bold text-gray-900">
-										Total:
-									</span>
-									<span className="text-2xl font-bold text-blue-600">
-										${cartTotal.toFixed(2)}
-									</span>
+									))}
 								</div>
 
-								<button
-									onClick={handlePlaceOrder}
-									className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
-								>
-									Place Order
-								</button>
+								<div className="border-t border-gray-200 pt-4">
+									<div className="flex justify-between items-center mb-4">
+										<span className="text-lg font-bold text-gray-900">
+											Total:
+										</span>
+										<span className="text-2xl font-bold text-blue-600">
+											${cartTotal.toFixed(2)}
+										</span>
+									</div>
 
-								<p className="text-xs text-gray-500 text-center mt-2">
-									Order will be sent to the kitchen
-									immediately
-								</p>
+									<button
+										onClick={handlePlaceOrder}
+										className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+									>
+										Place Order
+									</button>
+
+									<button
+										onClick={() => setCart([])}
+										className="w-full mt-2 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+									>
+										Clear All Items
+									</button>
+
+									<p className="text-xs text-gray-500 text-center mt-2">
+										Order will be sent to the kitchen
+										immediately
+									</p>
+								</div>
 							</div>
 						</div>
-					</div>
+					</>
 				)}
 
-				{/* Cart Icon for Mobile */}
-				{cart.length > 0 && (
+				{/* Floating Cart Button */}
+				{cart.length > 0 && !isCartOpen && (
 					<button
-						onClick={() => {
-							const cartElement =
-								document.querySelector(".fixed.bottom-0");
-							cartElement?.scrollIntoView({ behavior: "smooth" });
-						}}
-						className="fixed bottom-4 right-4 md:hidden bg-blue-600 text-white p-3 rounded-full shadow-lg z-10"
+						onClick={() => setIsCartOpen(true)}
+						className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg z-20 flex items-center gap-3 hover:bg-blue-700 transition-colors"
 					>
-						<svg
-							className="w-6 h-6"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-							/>
-						</svg>
-						<span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-							{cart.length}
+						<div className="relative">
+							<svg
+								className="w-6 h-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+								/>
+							</svg>
+							<span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+								{cart.reduce(
+									(sum, item) => sum + item.quantity,
+									0
+								)}
+							</span>
+						</div>
+						<span className="font-medium">
+							${cartTotal.toFixed(2)}
 						</span>
 					</button>
 				)}
