@@ -323,7 +323,6 @@ export class CategoryService {
       const existingCategory = await MenuCategory.findOne({
         where: {
           name: data.name.trim(),
-          is_deleted: false
         }
       });
       
@@ -336,7 +335,7 @@ export class CategoryService {
       if (displayOrder === undefined) {
         // Lấy display_order cao nhất và +1
         const maxOrder = await MenuCategory.max('display_order', {
-          where: { is_deleted: false }
+
         });
         displayOrder = (maxOrder || 0) + 1;
       }
@@ -347,7 +346,6 @@ export class CategoryService {
         description: data.description ? data.description.trim() : null,
         display_order: displayOrder,
         status: data.status || 'active',
-        is_deleted: false,
         created_at: new Date(),
         updated_at: new Date()
       };
