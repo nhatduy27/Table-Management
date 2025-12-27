@@ -309,6 +309,73 @@ export class CategoryService {
       }
     };
   }
+
+
+  static async create(data) {
+    // Validate dữ liệu đầu vào
+    const validationErrors = this.validateCategoryData(data);
+    if (validationErrors.length > 0) {
+      throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+    }
+    
+    try {
+      // 1. Kiểm tra trùng tên danh mục
+      const existingCategory = await MenuCategory.findOne({
+        where: {
+          name: data.name.trim(),
+          is_deleted: false
+        }
+      });
+      
+      if (existingCategory) {
+        throw new Error(`Category "${data.name}" already exists`);
+      }
+      
+      // 2. Xác định display_order nếu không có
+      let displayOrder = data.display_order;
+      if (displayOrder === undefined) {
+        // Lấy display_order cao nhất và +1
+        const maxOrder = await MenuCategory.max('display_order', {
+          where: { is_deleted: false }
+        });
+        displayOrder = (maxOrder || 0) + 1;
+      }
+      
+      // 3. Chuẩn bị dữ liệu tạo
+      const categoryData = {
+        name: data.name.trim(),
+        description: data.description ? data.description.trim() : null,
+        display_order: displayOrder,
+        status: data.status || 'active',
+        is_deleted: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      
+      // 4. Tạo danh mục mới
+      const newCategory = await MenuCategory.create(categoryData);
+      
+      // 5. Lấy thông tin đầy đủ với các quan hệ nếu có
+      const createdCategory = await MenuCategory.findByPk(newCategory.id);
+      
+      return {
+        category: createdCategory,
+        metadata: {
+          display_order: displayOrder,
+          created_at: createdCategory.created_at
+        }
+      };
+      
+    } catch (error) {
+      // Xử lý lỗi cụ thể từ database
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        throw new Error(`Category "${data.name}" already exists in the database`);
+      }
+      
+      // Ném lại lỗi để controller xử lý
+      throw error;
+    }
+  }
   
 
 }
