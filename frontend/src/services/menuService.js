@@ -32,7 +32,7 @@ const menuService = {
   // Update category
   updateCategory: async (id, updateData) => {
     try {
-      const response = await publicApi.put(`/menu/categories/${id}`, updateData);
+      const response = await adminApi.put(`/menu/categories/${id}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating category:', error);
@@ -54,7 +54,7 @@ const menuService = {
   // Delete category (soft delete)
   deleteCategory: async (id) => {
     try {
-      const response = await publicApi.patch(`/menu/categories/${id}/delete`);
+      const response = await adminApi.patch(`/menu/categories/${id}/delete`);
       return response.data;
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -66,7 +66,7 @@ const menuService = {
   // Get all items
   getAllItems: async (params = {}) => {
     try {
-      const response = await publicApi.get('/menu/items', { params });
+      const response = await adminApi.get('/menu/items', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -77,7 +77,7 @@ const menuService = {
   // Get item by ID
   getItemById: async (id) => {
     try {
-      const response = await publicApi.get(`/menu/items/${id}`);
+      const response = await adminApi.get(`/menu/items/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching item:', error);
@@ -88,7 +88,7 @@ const menuService = {
   // Create item
   createItem: async (itemData) => {
     try {
-      const response = await publicApi.post('/menu/items', itemData);
+      const response = await adminApi.post('/menu/items', itemData);
       return response.data;
     } catch (error) {
       console.error('Error creating item:', error);
@@ -99,7 +99,7 @@ const menuService = {
   // Update item
   updateItem: async (id, updateData) => {
     try {
-      const response = await publicApi.put(`/menu/items/${id}`, updateData);
+      const response = await adminApi.put(`/menu/items/${id}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating item:', error);
@@ -110,7 +110,7 @@ const menuService = {
   // Delete item
   deleteItem: async (id) => {
     try {
-      const response = await publicApi.delete(`/menu/items/${id}`);
+      const response = await adminApi.delete(`/menu/items/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting item:', error);
@@ -175,7 +175,7 @@ const menuService = {
   // Create modifier group
   createModifierGroup: async (groupData) => {
     try {
-      const response = await publicApi.post('/menu/modifier-groups', groupData);
+      const response = await adminApi.post('/menu/modifier-groups', groupData);
       return response.data;
     } catch (error) {
       console.error('Error creating modifier group:', error);
@@ -186,7 +186,7 @@ const menuService = {
   // Update modifier group
   updateModifierGroup: async (id, updateData) => {
     try {
-      const response = await publicApi.put(`/menu/modifier-groups/${id}`, updateData);
+      const response = await adminApi.put(`/menu/modifier-groups/${id}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating modifier group:', error);
@@ -197,7 +197,7 @@ const menuService = {
   // Create modifier option
   createModifierOption: async (groupId, optionData) => {
     try {
-      const response = await publicApi.post(`/menu/modifier-groups/${groupId}/options`, optionData);
+      const response = await adminApi.post(`/menu/modifier-groups/${groupId}/options`, optionData);
       return response.data;
     } catch (error) {
       console.error('Error creating modifier option:', error);
@@ -208,7 +208,7 @@ const menuService = {
   // Update modifier option
   updateModifierOption: async (id, updateData) => {
     try {
-      const response = await publicApi.put(`/menu/modifier-options/${id}`, updateData);
+      const response = await adminApi.put(`/menu/modifier-options/${id}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating modifier option:', error);
@@ -219,7 +219,7 @@ const menuService = {
   // Attach modifier group to item
   attachModifierGroup: async (itemId, groupId) => {
     try {
-      const response = await publicApi.post(`/menu/items/${itemId}/modifier-groups`, {
+      const response = await adminApi.post(`/menu/items/${itemId}/modifier-groups`, {
         group_id: groupId
       });
       return response.data;
