@@ -1,14 +1,14 @@
-import MenuCategory from "../models/menuCategory.js";
-import db from "../models/index.js";
-import MenuItem from "../models/menuItem.js";
+import MenuCategory from "../../models/menuCategory.js";
+import db from "../../models/index.js";
+import MenuItem from "../../models/menuItem.js";
 
-import { ItemService } from "../services/menuItem.service.js";
+import { ItemService } from "../../services/menuItem.service.js";
 import {
 	createMenuItemSchema,
 	updateMenuItemSchema,
 	updateMenuItemStatusSchema,
-} from "../validators/item.validator.js";
-import { validate } from "../middlewares/validator.js";
+} from "../../validators/item.validator.js";
+import { validate } from "../../middlewares/validator.js";
 
 const { MenuItemPhoto } = db;
 

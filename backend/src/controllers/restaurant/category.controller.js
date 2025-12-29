@@ -1,10 +1,10 @@
 
-import MenuCategory from '../models/menuCategory.js';
-import MenuItem from '../models/menuItem.js';
+import MenuCategory from '../../models/menuCategory.js';
+import MenuItem from '../../models/menuItem.js';
 
-import { CategoryService } from '../services/category.service.js';
-import {createCategorySchema, updateCategorySchema, updateCategoryStatusSchema } from '../validators/category.validator.js'
-import { validate } from '../middlewares/validator.js';
+import { CategoryService } from '../../services/category.service.js';
+import {createCategorySchema, updateCategorySchema, updateCategoryStatusSchema } from '../../validators/category.validator.js'
+import { validate } from '../../middlewares/validator.js';
 
 
 

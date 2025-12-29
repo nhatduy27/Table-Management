@@ -1,9 +1,9 @@
-import Table from '../models/table.js';
+import Table from '../../models/table.js';
 
 
-import { TableService } from '../services/table.service.js';
-import { createTableSchema, updateTableSchema, updateTableStatusSchema } from '../validators/table.validator.js';
-import { validate } from '../middlewares/validator.js';
+import { TableService } from '../../services/table.service.js';
+import { createTableSchema, updateTableSchema, updateTableStatusSchema } from '../../validators/table.validator.js';
+import { validate } from '../../middlewares/validator.js';
 
 // Lấy tất cả bàn
 export const getAllTable = async (req, res) => {

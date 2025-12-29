@@ -25,10 +25,10 @@ const setupInterceptors = (instance) => {
   instance.interceptors.request.use(
     (config) => {
       // Add auth token here when authentication is implemented
-      // const token = localStorage.getItem('authToken');
-      // if (token) {
-      //   config.headers.Authorization = `Bearer ${token}`;
-      // }
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
       return config;
     },
     (error) => {
@@ -40,6 +40,20 @@ const setupInterceptors = (instance) => {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
+      // Xử lý lỗi 401 (Token hết hạn hoặc không hợp lệ)
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.warn("Token hết hạn hoặc không hợp lệ. Đang đăng xuất...");
+        
+        // Xóa token bẩn
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Đá về trang Login (Dùng window.location để refresh lại app sạch sẽ)
+        // Vì bạn dùng HashRouter nên đường dẫn là /#/login
+        window.location.href = '/#/login'; 
+      }
+
+      
       if (error.response) {
         const message =
           error.response.data?.message ||

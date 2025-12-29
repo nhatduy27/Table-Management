@@ -1,17 +1,17 @@
-import { ModifierService } from "../services/modifier.service.js";
-import ModifierGroup from "../models/modifierGroup.js";
-import ModifierOption from "../models/modifierOption.js";
+import { ModifierService } from "../../services/modifier.service.js";
+import ModifierGroup from "../../models/modifierGroup.js";
+import ModifierOption from "../../models/modifierOption.js";
 import {
 	createModifierGroupSchema,
 	updateModifierGroupSchema,
-} from "../validators/modifierGroup.validator.js";
+} from "../../validators/modifierGroup.validator.js";
 import {
 	createModifierOptionSchema,
 	updateModifierOptionSchema,
-} from "../validators/modifierOption.validator.js";
-import { attachModifierGroupsSchema } from "../validators/menuItemModifierGroup.validator.js";
+} from "../../validators/modifierOption.validator.js";
+import { attachModifierGroupsSchema } from "../../validators/menuItemModifierGroup.validator.js";
 
-import { validate } from "../middlewares/validator.js";
+import { validate } from "../../middlewares/validator.js";
 
 // GET all modifier groups
 export const getAllModifierGroups = async (req, res) => {

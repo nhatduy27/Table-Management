@@ -5,7 +5,7 @@ import {
   getTableById,
   updateTable,
   updateTableStatus
-} from '../controllers/table.controller.js';
+} from '../../controllers/restaurant/table.controller.js';
 import {
   generateQRCode,
   regenerateQRCode,
@@ -13,7 +13,7 @@ import {
   downloadQRCode,
   downloadAllQRCodes,
   getQRPreview
-} from '../controllers/qr.controller.js';
+} from '../../controllers/restaurant/qr.controller.js';
 
 const router = express.Router();
 

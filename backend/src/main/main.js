@@ -6,13 +6,7 @@ import dotenv from 'dotenv';
 // Import db từ index (đã bao gồm setup associations)
 import db from '../models/index.js'; 
 
-import tableAdminRoutes from '../routes/tableAdmin.routes.js'; 
-import tablePublicRoutes from '../routes/tablePublic.routes.js';
-import menuRoutes from '../routes/menu.routes.js'; 
-import menuItemPhotoRoutes from '../routes/menuItemPhoto.routes.js'; 
-import guestMenuRoutes from "../routes/guestMenu.routes.js"
-import verifyQRTokenMiddleware from '../middlewares/verifyQRToken.middleware.js';
-import authRoutes from '../routes/auth.routes.js';
+import rootRouter from '../routes/index.js';
 
 dotenv.config();
 
@@ -25,13 +19,7 @@ app.use(express.json());
 
 // Routes
 // app.use('/api/menu', tablePublicRoutes);
-app.use('/api/admin/tables', tableAdminRoutes);
-app.use('/api/admin/menu', menuRoutes);
-app.use('/api/admin/menu', menuItemPhotoRoutes); 
-
-app.use('/api/menu', verifyQRTokenMiddleware);
-app.use('/api/menu', guestMenuRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api', rootRouter);
 
 // Test routes
 app.get("/connected", (req, res) => {

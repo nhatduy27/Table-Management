@@ -5,14 +5,14 @@ import {
 	updateCategory,
 	updateCategoryStatus,
 	deleteCategory,
-} from "../controllers/category.controller.js";
+} from "../../controllers/restaurant/category.controller.js";
 import {
 	getAllItem,
 	getItemById,
 	createItem,
 	updateItem,
 	deleteItem,
-} from "../controllers/item.controller.js";
+} from "../../controllers/restaurant/item.controller.js";
 
 import {
 	getAllModifierGroups,
@@ -24,7 +24,7 @@ import {
 	updateModifierOption,
 	deleteModifierOption,
 	attachModifierGroup,
-} from "../controllers/modifier.controller.js";
+} from "../../controllers/restaurant/modifier.controller.js";
 
 const router = express.Router();
 
@@ -41,7 +41,7 @@ router.put("/categories/:id", updateCategory);
 //PATCH	/api/admin/menu/categories/:id/status
 router.patch("/categories/:id/status", updateCategoryStatus);
 
-//PATCH	/api/admin/categories/:id/delete
+//PATCH	/api/admin/menu/categories/:id/delete
 router.patch("/categories/:id/delete", deleteCategory);
 
 // ============= iTEM Routes =============

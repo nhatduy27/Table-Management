@@ -31,7 +31,7 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // Chuyển hướng dựa trên Role (Logic phân quyền)
-      if (data.user.role === 'admin') {
+      if (data.user.role === 'admin' || data.user.role === 'super_admin') {
         navigate("/tables");
       } else if (data.user.role === 'waiter') {
         navigate("/orders"); // Sau này sẽ làm trang này

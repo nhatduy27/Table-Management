@@ -1,7 +1,7 @@
 import express from 'express';
-import menuItemPhotoController from '../controllers/menuItemPhoto.controller.js';
+import menuItemPhotoController from '../../controllers/restaurant/menuItemPhoto.controller.js';
 // SỬA DÒNG NÀY: Import theo kiểu có ngoặc {}
-import { uploadMenuItemPhotos, handleUploadErrors } from '../middlewares/uploadMiddleware.js';
+import { uploadMenuItemPhotos, handleUploadErrors } from '../../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
 

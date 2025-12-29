@@ -36,7 +36,7 @@ User.init(
       allowNull: false,
       validate: {
         // Vẫn giữ cái này để code tự kiểm tra, không cho nhập linh tinh
-        isIn: [['admin', 'waiter', 'kitchen', 'customer']],
+        isIn: [['super_admin', 'admin', 'waiter', 'kitchen', 'customer']],
       }
     },
   },

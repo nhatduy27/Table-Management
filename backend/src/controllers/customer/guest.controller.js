@@ -1,4 +1,4 @@
-import * as guestService from "../services/guest.service.js";
+import * as guestService from "../../services/guest.service.js";
 
 const getGuestMenu = async (req, res) => {
 	try {

@@ -1,5 +1,5 @@
 // controllers/menuItemPhoto.controller.js
-import menuItemPhotoService from '../services/menuItemPhoto.service.js';
+import menuItemPhotoService from '../../services/menuItemPhoto.service.js';
 
 class MenuItemPhotoController {
     // POST /api/admin/menu/items/:id/photos
