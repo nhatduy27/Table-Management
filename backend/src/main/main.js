@@ -12,6 +12,7 @@ import menuRoutes from '../routes/menu.routes.js';
 import menuItemPhotoRoutes from '../routes/menuItemPhoto.routes.js'; 
 import guestMenuRoutes from "../routes/guestMenu.routes.js"
 import verifyQRTokenMiddleware from '../middlewares/verifyQRToken.middleware.js';
+import authRoutes from '../routes/auth.routes.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/admin/menu', menuItemPhotoRoutes);
 
 app.use('/api/menu', verifyQRTokenMiddleware);
 app.use('/api/menu', guestMenuRoutes);
+app.use('/api/auth', authRoutes);
 
 // Test routes
 app.get("/connected", (req, res) => {

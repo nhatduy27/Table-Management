@@ -8,10 +8,12 @@ import ModifierGroup from './modifierGroup.js';
 import ModifierOption from './modifierOption.js';
 import MenuItemModifierGroup from './menuItemModifierGroup.js'; // (Tên file đoán dựa trên ảnh)
 import Table from './table.js';
+import User from './user.js';
 
 // 2. Gom lại vào object db
 const db = {
   sequelize, // Instance kết nối
+  User,
   MenuCategory,
   MenuItem,
   MenuItemPhoto,
