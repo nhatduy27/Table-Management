@@ -106,3 +106,26 @@ export const createUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { role } = req.user;
+    
+    // Chỉ cho phép Super Admin xem
+    if (role !== 'super_admin') {
+      return res.status(403).json({ message: "Chỉ Super Admin mới có quyền này!" });
+    }
+
+    // Lọc: Chỉ lấy những user có role là 'admin' (Chủ nhà hàng)
+    // Nếu bạn muốn hiện cả Super Admin khác thì dùng [Op.or] hoặc điều chỉnh sau
+    const users = await db.User.findAll({
+      where: { role: 'admin' }, 
+      attributes: ['id', 'username', 'full_name', 'role', 'created_at'],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

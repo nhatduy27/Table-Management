@@ -11,6 +11,8 @@ import TableList from "./components/tables/TableList";
 import TableForm from "./components/tables/TableForm";
 import QRCodePage from "./components/tables/QRCodePage";
 import Login from "./pages/Login";
+import UserManagement from "./pages/admin/UserManagement"; 
+import SuperAdminRoute from "./components/common/SuperAdminRoute";
 
 import {
   CategoryList,
@@ -61,6 +63,11 @@ function App() {
             <Route path="/admin/menu/items/new" element={<MenuItemForm />} />
             <Route path="/admin/menu/items/:id" element={<MenuItemForm />} />
             <Route path="/admin/menu/modifiers" element={<ModifierGroupList />} />
+
+            {/* Superadmin page */}
+            <Route element={<SuperAdminRoute />}>
+              <Route path="/admin/users" element={<UserManagement />} />
+            </Route>
             
             {/* 404 Route... (Giữ nguyên code cũ của bạn đoạn này) */}
             <Route path="*" element={<div>404 Not Found</div>} />
