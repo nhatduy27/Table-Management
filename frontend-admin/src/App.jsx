@@ -13,6 +13,7 @@ import QRCodePage from "./components/tables/QRCodePage";
 import Login from "./pages/Login";
 import UserManagement from "./pages/admin/UserManagement"; 
 import SuperAdminRoute from "./components/common/SuperAdminRoute";
+import HomeRedirect from "./components/common/HomeRedirect";
 
 import {
   CategoryList,
@@ -46,10 +47,7 @@ function App() {
             {/* Nếu vào trang chủ "/" -> Kiểm tra: */}
             {/* - Nếu có token: nhảy vào /tables */}
             {/* - Nếu chưa có token: ProtectedRoute ở trên đã đá về /login rồi */}
-            <Route
-              path="/"
-              element={<Navigate to="/tables" replace />}
-            />
+            <Route path="/" element={<HomeRedirect />} />
 
             {/* Table routes */}
             <Route path="/tables" element={<TableList />} />
