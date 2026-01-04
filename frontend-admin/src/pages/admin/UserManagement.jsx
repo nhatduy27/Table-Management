@@ -15,10 +15,6 @@ const UserManagement = () => {
     role: "admin", 
   });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -31,6 +27,10 @@ const UserManagement = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };

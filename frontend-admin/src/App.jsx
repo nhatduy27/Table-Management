@@ -13,6 +13,8 @@ import QRCodePage from "./components/tables/QRCodePage";
 import Login from "./pages/Login";
 import UserManagement from "./pages/admin/UserManagement"; 
 import SuperAdminRoute from "./components/common/SuperAdminRoute";
+import HomeRedirect from "./components/common/HomeRedirect";
+import EmployeeManagement from "./pages/admin/EmployeeManagement";
 
 import {
   CategoryList,
@@ -43,15 +45,10 @@ function App() {
         <Route element={<ProtectedRoute />}>
           
           <Route element={<Layout />}>
-            {/* Nếu vào trang chủ "/" -> Kiểm tra: */}
-            {/* - Nếu có token: nhảy vào /tables */}
             {/* - Nếu chưa có token: ProtectedRoute ở trên đã đá về /login rồi */}
-            <Route
-              path="/"
-              element={<Navigate to="/tables" replace />}
-            />
+            <Route path="/" element={<HomeRedirect />} />
 
-            {/* Table routes */}
+            {/* Admin Table routes */}
             <Route path="/tables" element={<TableList />} />
             <Route path="/tables/new" element={<TableForm />} />
             <Route path="/tables/:id" element={<TableForm />} />
@@ -63,6 +60,8 @@ function App() {
             <Route path="/admin/menu/items/new" element={<MenuItemForm />} />
             <Route path="/admin/menu/items/:id" element={<MenuItemForm />} />
             <Route path="/admin/menu/modifiers" element={<ModifierGroupList />} />
+            {/* Employee Management */}
+            <Route path="/admin/employees" element={<EmployeeManagement />} />
 
             {/* Superadmin page */}
             <Route element={<SuperAdminRoute />}>
