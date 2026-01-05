@@ -11,6 +11,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CustomerProfile from "./pages/CustomerProfile"; 
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderDetailPage from './pages/OrderDetailPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import "./App.css";
 
 function App() {
@@ -23,13 +24,12 @@ function App() {
         {/* Customer auth routes */}
         <Route path="/customer/login" element={<CustomerLoginPage />} />
         <Route path="/customer/register" element={<RegisterPage />} />
+        <Route path="/customer/verify-email" element={<VerifyEmailPage />} /> 
         
         {/* Customer profile and order routes */}
         <Route path="/customer/profile" element={<CustomerProfile />} />
         <Route path="/customer/orders" element={<OrderHistoryPage />} />
         <Route path="/customer/orders/:orderId" element={<OrderDetailPage />} />
-        
-    
         
         {/* Nếu khách vào trang chủ, tự động chuyển vào menu */}
         <Route path="/" element={<Navigate to="/menu" replace />} />
