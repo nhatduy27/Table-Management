@@ -20,13 +20,13 @@ const router = express.Router();
 // ============= Table CRUD Routes =============
 
 
-// GET /api/tables
+// GET /api/admin/tables
 router.get('/', getAllTable);
 
-// GET /api/tables/:id
+// GET /api/admin/tables/:id
 router.get('/:id', getTableById);
 
-// POST /api/tables
+// POST /api/admin/tables
 router.post('/', createTable);
 
 //PUT	/api/admin/tables/:id

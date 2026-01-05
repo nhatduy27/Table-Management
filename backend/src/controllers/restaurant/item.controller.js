@@ -15,11 +15,8 @@ const { MenuItemPhoto } = db;
 //LẤY TẤT CẢ ITEM
 export const getAllItem = async (req, res) => {
 	try {
-		// const menuItem = await MenuItem.findAll({
-		// 	order: [["created_at", "DESC"]],
-		// });
 		const menuItem = await MenuItem.findAll({
-			// 👇 QUAN TRỌNG: Vẫn phải giữ đoạn này để Frontend có ảnh mà hiển thị
+			// Vẫn phải giữ đoạn này để Frontend có ảnh mà hiển thị
 			include: [
 				{
 					model: MenuItemPhoto,

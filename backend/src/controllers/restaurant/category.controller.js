@@ -77,6 +77,8 @@ export const updateCategory = [
       // Validate business logic
       const validationErrors = await CategoryService.validateUpdateData(id, validatedData);
       if (validationErrors.length > 0) {
+        console.log("⚠️ [DEBUG] Validation Failed:", validationErrors);
+        
         return res.status(400).json({
           success: false,
           message: 'Validation failed',
@@ -184,7 +186,7 @@ export const updateCategoryStatus = [
 export const deleteCategory = [
     async (req, res) => {
       try {
-        const { id} = req.params;
+        const { id } = req.params;
         
         // 1. Tìm category với điều kiện restaurantId
         const category = await MenuCategory.findOne({
@@ -205,7 +207,7 @@ export const deleteCategory = [
         const activeItemsCount = await MenuItem.count({
           where: {
             category_id: id,
-            status : 'inactive'
+            status : 'active'
     
           }
         });

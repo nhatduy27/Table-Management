@@ -241,8 +241,6 @@ export const downloadAllQRCodes = async (req, res) => {
  */
 export const verifyQRToken = async (req, res) => {
 	try {
-
-		console.log("Đã chạy vào hàm này")
 		const { table: tableId, token } = req.query;
 
 		if (!tableId || !token) {

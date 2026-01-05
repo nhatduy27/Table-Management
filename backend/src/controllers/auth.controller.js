@@ -2,6 +2,7 @@ import db from '../models/index.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs'; 
 import dotenv from 'dotenv'; // Nhớ import dotenv
+import { Op } from 'sequelize';
 
 dotenv.config(); 
 
@@ -109,17 +110,27 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { role } = req.user;
-    
-    // Chỉ cho phép Super Admin xem
-    if (role !== 'super_admin') {
-      return res.status(403).json({ message: "Chỉ Super Admin mới có quyền này!" });
+    const currentUser = req.user; // Lấy thông tin người đang gọi API
+
+    let whereCondition = {};
+
+    // TRƯỜNG HỢP 1: Nếu là SUPER ADMIN -> Chỉ xem danh sách các Admin (Chủ quán)
+    if (currentUser.role === 'super_admin') {
+      whereCondition = { role: 'admin' };
+    } 
+    // TRƯỜNG HỢP 2: Nếu là ADMIN -> Chỉ xem danh sách Nhân viên (Waiter + Kitchen)
+    else if (currentUser.role === 'admin') {
+      whereCondition = { 
+        role: { [Op.or]: ['waiter', 'kitchen'] } // Lấy cả Waiter và Kitchen
+      };
+    } 
+    // TRƯỜNG HỢP 3: Các role khác không có quyền xem
+    else {
+      return res.status(403).json({ message: "Bạn không có quyền xem danh sách này!" });
     }
 
-    // Lọc: Chỉ lấy những user có role là 'admin' (Chủ nhà hàng)
-    // Nếu bạn muốn hiện cả Super Admin khác thì dùng [Op.or] hoặc điều chỉnh sau
     const users = await db.User.findAll({
-      where: { role: 'admin' }, 
+      where: whereCondition,
       attributes: ['id', 'username', 'full_name', 'role', 'created_at'],
       order: [['created_at', 'DESC']]
     });

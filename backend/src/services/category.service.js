@@ -101,6 +101,7 @@ export class CategoryService {
       if (data.display_order !== undefined && data.display_order !== category.display_order) {
         // Có thể kiểm tra display_order có hợp lệ trong context của restaurant không
         // Ví dụ: không cho phép vượt quá số lượng category
+        const maxDisplayOrder = await MenuCategory.max('display_order') || 0;
         
         if (data.display_order > maxDisplayOrder + 10) {
           errors.push(`Display order is too high. Maximum suggested: ${maxDisplayOrder + 1}`);

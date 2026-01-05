@@ -8,7 +8,7 @@ import Alert from "../../common/Alert";
 import ConfirmDialog from "../../common/ConfirmDialog";
 
 const MenuItemList = () => {
-	const navigate = useNavigate();
+	const navigate = useNavigate(); 
 	const [items, setItems] = useState([]);
 	const [categories, setCategories] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ const MenuItemList = () => {
 	const [sortBy, setSortBy] = useState("created_at");
 	const [sortOrder, setSortOrder] = useState("desc");
 	const [currentPage, setCurrentPage] = useState(1);
-	const itemsPerPage = 10;
+	const itemsPerPage = 4;
 
 	// Confirm dialog state
 	const [confirmDialog, setConfirmDialog] = useState({
