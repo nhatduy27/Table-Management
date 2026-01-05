@@ -7,7 +7,7 @@ const VerifyEmailPage = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const [timer, setTimer] = useState(900); // 15 phút
+	const [timer, setTimer] = useState(120); // 15 phút
 	const [canResend, setCanResend] = useState(false);
 	
 	const navigate = useNavigate();
@@ -21,7 +21,6 @@ const VerifyEmailPage = () => {
 	const from = location.state?.from || "/";
 	const message = location.state?.message;
 
-	console.log("🔍 VerifyEmailPage - State received:", location.state);
 
 	// Hiển thị message và kiểm tra thông tin
 	useEffect(() => {
@@ -151,7 +150,6 @@ const VerifyEmailPage = () => {
 		const otpString = otp.join("");
 		
 		if (otpString.length !== 6) {
-			setError("Vui lòng nhập đủ 6 số OTP");
 			return;
 		}
 
@@ -186,7 +184,7 @@ const VerifyEmailPage = () => {
 							registeredEmail: email,
 							registeredUsername: username,
 							from: from,
-							message: "✅ Email đã được xác thực thành công! Bây giờ bạn có thể đăng nhập."
+							message: "✅ Email đã được xác thực thành công!"
 						},
 						replace: true
 					});
@@ -234,7 +232,7 @@ const VerifyEmailPage = () => {
 			console.log("✅ [DEBUG] RESEND OTP RESPONSE:", response);
 			
 			if (response.success) {
-				setSuccess("✅ Đã gửi lại mã OTP. Vui lòng kiểm tra email.");
+				setSuccess("✅ Vui lòng kiểm tra email mã OTP của bạn");
 				setTimer(900); // Reset timer về 15 phút
 				setCanResend(false);
 				setOtp(["", "", "", "", "", ""]);

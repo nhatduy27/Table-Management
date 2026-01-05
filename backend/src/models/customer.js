@@ -51,16 +51,7 @@ Customer.init(
           customer.password = await bcrypt.hash(customer.password, salt);
         }
       },
-      afterCreate: async (customer) => {
-        // Tạo bản ghi xác thực email mặc định khi tạo customer mới
-        await VerifiedEmail.create({
-          customer_uid: customer.uid,
-          email: customer.email,
-          is_verified: false
-        });
-      },
       afterUpdate: async (customer) => {
-        // Nếu email được cập nhật, tạo bản ghi xác thực mới
         if (customer.changed('email')) {
           await VerifiedEmail.create({
             customer_uid: customer.uid,

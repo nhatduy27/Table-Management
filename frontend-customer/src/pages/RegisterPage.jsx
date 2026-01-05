@@ -58,7 +58,7 @@ const RegisterPage = () => {
 
 				setSuccess("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
 				
-				// 🔥 SỬA: Redirect đến trang verify email
+				
 				setTimeout(() => {
 					navigate("/customer/verify-email", { 
 						state: { 

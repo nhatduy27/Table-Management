@@ -8,59 +8,6 @@ class OTPService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // Tạo OTP cho đăng ký
-  async createRegistrationOTP(customerUid, email, username) {
-    try {
-      // Kiểm tra customer tồn tại
-      const customer = await Customer.findOne({
-        where: { uid: customerUid, email: email }
-      });
-
-      if (!customer) {
-        throw new Error("Không tìm thấy tài khoản");
-      }
-
-      // Kiểm tra email đã được verify chưa
-      const existingVerified = await VerifiedEmail.findOne({
-        where: {
-          customer_uid: customerUid,
-          email: email,
-          is_verified: true
-        }
-      });
-
-      if (existingVerified) {
-        throw new Error("Email này đã được xác thực rồi");
-      }
-
-      // Tạo OTP mới - SỬA: DÙNG this.generateOTP()
-      const otp = this.generateOTP();
-      const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
-
-      // Lưu OTP vào database
-      const verificationRecord = await VerifiedEmail.create({
-        customer_uid: customerUid,
-        email: email,
-        otp_code: otp,
-        otp_expires: otpExpires,
-        is_verified: false
-      });
-
-      // Gửi email OTP
-      await emailService.sendRegistrationOTP(email, otp, username);
-
-      return {
-        success: true,
-        otp: otp,
-        otpExpires: otpExpires,
-        verificationId: verificationRecord.id
-      };
-    } catch (error) {
-      console.error("Create OTP error:", error);
-      throw error;
-    }
-  }
-
   // Xác thực OTP
   async verifyOTP(customerUid, email, otpCode) {
     try {
@@ -129,34 +76,24 @@ class OTPService {
         throw new Error("Không tìm thấy tài khoản");
       }
 
-      // Kiểm tra email đã được verify chưa
-      const existingVerified = await VerifiedEmail.findOne({
+      const otp = this.generateOTP();
+      const otpExpires = new Date(Date.now() + 2 * 60 * 1000); 
+
+      const verificationRecord = await VerifiedEmail.findOne({
         where: {
           customer_uid: customerUid,
           email: email,
-          is_verified: true
-        }
+          is_verified: false
+        },
+        order: [['created_at', 'DESC']]
       });
 
-      if (existingVerified) {
-        throw new Error("Email này đã được xác thực rồi");
-      }
-
-      // Tạo OTP mới - SỬA: DÙNG this.generateOTP()
-      const otp = this.generateOTP();
-      const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
-
-      // Lưu OTP mới
-      const verificationRecord = await VerifiedEmail.create({
-        customer_uid: customerUid,
-        email: email,
-        otp_code: otp,
-        otp_expires: otpExpires,
-        is_verified: false
-      });
+      verificationRecord.otp_code = otp;
+      verificationRecord.otp_expires = otpExpires;
+      await verificationRecord.save();
 
       // Gửi email
-      await emailService.sendRegistrationOTP(email, otp, customer.username);
+      await emailService.sendOTPEmail(email, otp, customer.username);
 
       return {
         success: true,

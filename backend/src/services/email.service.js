@@ -5,7 +5,6 @@ class EmailService {
   // Gửi OTP cho đăng ký
   async sendOTPEmail(email, otp, username = '') {
     try {
-      console.log(`📧 Sending OTP to: ${email}, OTP: ${otp}`);
       
       const mailOptions = {
         from: process.env.EMAIL_FROM || '"Smart Restaurant" <noreply@smartrestaurant.com>',

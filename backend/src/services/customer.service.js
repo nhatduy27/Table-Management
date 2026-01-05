@@ -44,7 +44,7 @@ class CustomerService {
         // Tạo OTP và gửi email
         try {
             const otp = OTPService.generateOTP();
-            const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+            const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
             
             await VerifiedEmail.create({
                 customer_uid: customer.uid,
