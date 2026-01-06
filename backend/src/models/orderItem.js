@@ -44,16 +44,22 @@ OrderItem.init(
 // Định nghĩa associate theo form của ModifierOption
 OrderItem.associate = (models) => {
   // Quan hệ với đơn hàng
-  OrderItem.belongsTo(models.Order, { 
-    foreignKey: 'order_id', 
-    as: 'order' 
+  OrderItem.belongsTo(models.Order, {
+    foreignKey: "order_id",
+    as: "order",
   });
 
   // Quan hệ với món ăn
-  OrderItem.belongsTo(models.MenuItem, { 
-    foreignKey: 'menu_item_id', 
-    as: 'menu_item',
-    constraints: false 
+  OrderItem.belongsTo(models.MenuItem, {
+    foreignKey: "menu_item_id",
+    as: "menu_item",
+    constraints: false,
+  });
+
+  // Quan hệ với OrderItemModifier
+  OrderItem.hasMany(models.OrderItemModifier, {
+    foreignKey: "order_item_id",
+    as: "modifiers",
   });
 };
 
