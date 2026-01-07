@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -16,12 +16,14 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyForgotPasswordOTPPage from "./pages/VerifyForgotPasswordOTPPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import "./App.css";
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         {/* Customer-facing menu route - NHẬN QUERY PARAMETERS */}
         <Route path="/menu" element={<MenuPage />} />
         
@@ -54,7 +56,7 @@ function App() {
                   Không tìm thấy trang bạn yêu cầu
                 </p>
                 <a
-                  href="/#/menu"
+                  href="/menu"
                   className="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors"
                 >
                   Quay lại Thực đơn
