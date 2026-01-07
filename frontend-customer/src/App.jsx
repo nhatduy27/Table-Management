@@ -12,6 +12,10 @@ import CustomerProfile from "./pages/CustomerProfile";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderDetailPage from './pages/OrderDetailPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+// Import các trang quên mật khẩu
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import VerifyForgotPasswordOTPPage from "./pages/VerifyForgotPasswordOTPPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import "./App.css";
 
 function App() {
@@ -25,6 +29,11 @@ function App() {
         <Route path="/customer/login" element={<CustomerLoginPage />} />
         <Route path="/customer/register" element={<RegisterPage />} />
         <Route path="/customer/verify-email" element={<VerifyEmailPage />} /> 
+        
+        {/* Forgot password routes */}
+        <Route path="/customer/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/customer/forgot-password/verify-otp" element={<VerifyForgotPasswordOTPPage />} />
+        <Route path="/customer/forgot-password/reset" element={<ResetPasswordPage />} />
         
         {/* Customer profile and order routes */}
         <Route path="/customer/profile" element={<CustomerProfile />} />

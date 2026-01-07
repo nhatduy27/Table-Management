@@ -126,6 +126,60 @@ class CustomerService {
     }
   }
 
+  // ========== FORGOT PASSWORD METHODS ==========
+
+  // Gửi OTP quên mật khẩu
+  async sendForgotPasswordOTP(email) {
+    try {
+      const response = await publicApi.post("/customer/forgot-password/send-otp", {
+        email
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Send forgot password OTP error:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Không thể gửi OTP"
+      };
+    }
+  }
+
+  // Xác thực OTP quên mật khẩu
+  async verifyForgotPasswordOTP(email, otp) {
+    try {
+      const response = await publicApi.post("/customer/forgot-password/verify-otp", {
+        email,
+        otp
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Verify forgot password OTP error:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Xác thực OTP thất bại"
+      };
+    }
+  }
+
+  // Đặt lại mật khẩu sau khi xác thực OTP
+  async resetPassword(email, otp, newPassword, confirmPassword) {
+    try {
+      const response = await publicApi.post("/customer/forgot-password/reset", {
+        email,
+        otp,
+        newPassword,
+        confirmPassword
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Reset password error:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Không thể đặt lại mật khẩu"
+      };
+    }
+  }
+
   // Lấy thông tin customer (protected)
   async getMe() {
     try {

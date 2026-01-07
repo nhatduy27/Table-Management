@@ -116,7 +116,7 @@ class CustomerService {
             // Nếu không có OTP active, tạo mới và gửi email
             if (!activeOTP) {
                 const otp = OTPService.generateOTP();
-                const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+                const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
                 
                 await VerifiedEmail.create({
                     customer_uid: customer.uid,
@@ -128,7 +128,6 @@ class CustomerService {
 
                 await emailService.sendOTPEmail(customer.email, otp, customer.username);
             }
-
             throw new Error("EMAIL_NOT_VERIFIED");
         }
 
@@ -138,6 +137,97 @@ class CustomerService {
             accessToken,
             isEmailVerified: true 
         };
+    }
+
+    async sendForgotPasswordOTP(email) {
+        try {
+            const verificationRecord = await VerifiedEmail.findOne({
+                where: {
+                    email: email
+                },
+                order: [['created_at', 'DESC']]
+            });
+
+            if(!verificationRecord){
+                throw new Error("Email chưa được đăng ký");
+            }
+
+            
+            // Tạo OTP
+            const otp = OTPService.generateOTP();
+            const otpExpires = new Date(Date.now() + 2 * 60 * 1000); 
+
+            // Lưu OTP vào database
+            verificationRecord.is_verified = true;
+            verificationRecord.otp_code = otp;
+            verificationRecord.otp_expires = otpExpires;
+            await verificationRecord.save();
+
+            // Gửi email
+            await emailService.sendOTPEmail(email, otp, "");
+
+            return {
+                success: true,
+                message: "Mã OTP đã được gửi đến email của bạn",
+                email: email
+            };
+        } catch (error) {
+            console.error("Send forgot password OTP error:", error);
+            throw error;
+        }
+    }   
+
+    async verifyForgotPasswordOTP(email, otp) {
+        try {
+            const verificationRecord = await VerifiedEmail.findOne({ 
+            where: { 
+                email,
+                otp_code: otp,
+            }
+            });
+
+            if (!verificationRecord) {
+                throw new Error("Mã OTP không hợp lệ hoặc đã hết hạn");
+            }
+
+            //Kiểm tra hạn của mã 
+            if (verificationRecord.otp_expires < new Date()) {
+                throw new Error("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
+            }
+
+            return {
+                success: true,
+                message: "Xác thực OTP thành công",
+                email: email
+            };
+        } catch (error) {
+            console.error("Verify forgot password OTP error:", error);
+            throw error;
+        }
+    }
+
+
+    async resetPasswordWithoutOld(email, newPassword) {
+        try {
+            
+            const customer = await Customer.findOne({
+                where: { email }
+            });
+
+            if (!customer) {
+                throw new Error("Tài khoản không tồn tại");
+            }
+
+            await customer.update({ password: newPassword });
+            
+            return {
+                success: true,
+                message: "Đặt lại mật khẩu thành công"
+            };
+        } catch (error) {
+            console.error("Reset password without old error:", error);
+            throw error;
+        }
     }
 
     // Lấy thông tin khách hàng bằng uid
@@ -209,18 +299,6 @@ class CustomerService {
 
         await customer.update(updateData);
         return customer;
-    }
-
-    // Đổi mật khẩu bằng uid
-    async changePassword(uid, oldPassword, newPassword){  // NHỚ: parameter là uid
-        const customer = await Customer.findByPk(uid);
-        if(!customer) throw new Error("Tài khoản không tồn tại");
-
-        const isValid = await customer.comparePassword(oldPassword);
-        if(!isValid) throw new Error("Mật khẩu cũ không đúng");
-
-        await customer.update({password: newPassword});
-        return true;
     }
 
     // Kiểm tra email tồn tại

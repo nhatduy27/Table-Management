@@ -178,7 +178,7 @@ const RegisterPage = () => {
 							message: "Đăng ký thành công! Vui lòng xác thực email." 
 						}
 					});
-				}, 1500);
+				});
 
 			} else {
 				// Xử lý lỗi từ server

@@ -10,7 +10,7 @@ export const verifyToken = (req, res, next) => {
   jwt.verify(token, process.env.JWT_SECRET || 'mat-khau-bi-mat-cua-admin', (err, user) => {
     if (err) return res.status(403).json({ message: "Token không hợp lệ hoặc hết hạn" });
     
-    req.user = user; // Gán thông tin user vào request để dùng ở bước sau
-    next(); // Cho phép đi tiếp vào controller
+    req.user = user; 
+    next(); 
   });
 };

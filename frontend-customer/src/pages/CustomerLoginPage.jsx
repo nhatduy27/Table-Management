@@ -50,7 +50,7 @@ const CustomerLoginPage = () => {
 		setLoading(true);
 
 		try {
-			// 🔥 SỬA: Gọi login API mới
+			//Gọi login API mới
 			const result = await customerService.login(email, password);
 
 			// Kiểm tra nếu cần verify email

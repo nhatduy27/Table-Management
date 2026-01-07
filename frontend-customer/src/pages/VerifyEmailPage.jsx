@@ -210,7 +210,7 @@ const VerifyEmailPage = () => {
 			const response = await customerService.resendOTP(customerId, email);
 			
 			if (response.success) {
-				setSuccess("✅ Vui lòng kiểm tra email mã OTP của bạn");
+				setSuccess("Vui lòng kiểm tra email mã OTP của bạn");
 				setTimer(120); 
 				setCanResend(false);
 				setOtp(["", "", "", "", "", ""]);
