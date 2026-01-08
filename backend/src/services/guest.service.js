@@ -105,21 +105,33 @@ const getGuestMenu = async ({
 	});
 
 	// 5. Format response
-	const formattedItems = items.map((item) => ({
-		id: item.id,
-		name: item.name,
-		description: item.description,
-		price: item.price,
-		is_chef_recommended: item.is_chef_recommended,
+	const formattedItems = items.map((item) => {
+    // Tìm ảnh primary thật sự trong danh sách ảnh lấy về
+    // Nếu không có cái nào là primary thì lấy cái đầu tiên làm đại diện
+    const actualPrimaryPhoto = item.photos?.find(p => p.is_primary === true) 
+                            || (item.photos && item.photos.length > 0 ? item.photos[0] : null);
 
-    status: item.status,         
-    prep_time_minutes: item.prep_time_minutes,
+    return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        is_chef_recommended: item.is_chef_recommended,
 
-		primary_photo:
-			item.photos && item.photos.length > 0 ? item.photos[0] : null,
-		category: item.category,
-		modifierGroups: item.modifierGroups || [],
-	}));
+        // 👇 Bổ sung các trường bị thiếu hôm qua
+        status: item.status,
+        prep_time_minutes: item.prep_time_minutes,
+
+        // 👇 Vẫn giữ cái này cho Card bên ngoài dùng
+        primary_photo: actualPrimaryPhoto,
+
+        // 👇 THÊM MỚI: Gửi toàn bộ danh sách ảnh cho Modal chi tiết dùng
+        photos: item.photos || [], 
+        
+        category: item.category,
+        modifierGroups: item.modifierGroups || [],
+    };
+  });
 
 	// 6. Tính pagination info
 	const totalPages = Math.ceil(count / limit);

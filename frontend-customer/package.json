@@ -12,10 +12,13 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
+    "framer-motion": "^12.24.10",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.10.1",
+    "socket.io-client": "^4.8.3",
     "sweetalert2": "^11.26.17",
     "sweetalert2-react-content": "^5.1.1"
   },

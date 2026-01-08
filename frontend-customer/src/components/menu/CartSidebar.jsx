@@ -1,178 +1,161 @@
 import React from "react";
 
 const CartSidebar = ({
-	cart,
-	cartTotal,
-	isOpen,
-	onClose,
-	onUpdateQuantity,
-	onRemoveItem,
-	onClearCart,
-	onPlaceOrder,
+  cart,
+  cartTotal,
+  isOpen,
+  onClose,
+  onUpdateQuantity,
+  onRemoveItem,
+  onClearCart,
+  onPlaceOrder,
+  orderPlacing, // [FIX 1] Nhận thêm prop này từ MenuPage
 }) => {
-	if (!isOpen || cart.length === 0) return null;
+  if (!isOpen || cart.length === 0) return null;
 
-	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-	return (
-		<>
-			{/* Backdrop - semi-transparent */}
-			<div className="fixed inset-0 bg-black/20 z-30" onClick={onClose} />
-			<div className="fixed bottom-0 left-0 right-0 md:right-4 md:bottom-4 md:left-auto md:w-96 bg-white shadow-2xl rounded-t-2xl md:rounded-2xl z-40 max-h-[80vh] overflow-hidden">
-				<div className="p-4">
-					<div className="flex items-center justify-between mb-4">
-						<h3 className="text-lg font-bold text-gray-900">
-							Your Order ({totalItems} items)
-						</h3>
-						<button
-							onClick={onClose}
-							className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-						>
-							<svg
-								className="w-6 h-6"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M6 18L18 6M6 6l12 12"
-								/>
-							</svg>
-						</button>
-					</div>
+  // Hàm format tiền tệ Việt Nam
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
 
-					<div className="max-h-60 overflow-y-auto mb-4">
-						{cart.map((item) => (
-							<div
-								key={item.cartItemId || item.id}
-								className="flex items-center justify-between py-3 border-b border-gray-100"
-							>
-								<div className="flex-1">
-									<p className="font-medium text-gray-900">
-										{item.name}
-									</p>
-									{/* Display selected modifiers */}
-									{item.modifiers &&
-										item.modifiers.length > 0 && (
-											<div className="mt-1">
-												{item.modifiers.map((mod) => (
-													<p
-														key={mod.optionId}
-														className="text-xs text-gray-500"
-													>
-														+ {mod.optionName} (+$
-														{mod.priceAdjustment.toFixed(
-															2
-														)}
-														)
-													</p>
-												))}
-											</div>
-										)}
-									{/* Special instructions note */}
-									{item.note && (
-										<p className="text-xs text-amber-600 italic mt-1">
-											📝 {item.note}
-										</p>
-									)}
-									<p className="text-sm text-gray-600">
-										${item.unitPrice.toFixed(2)} each
-									</p>
-								</div>
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/40 z-30 backdrop-blur-sm" onClick={onClose} />
+      
+      {/* Sidebar Content */}
+      <div className="fixed bottom-0 left-0 right-0 md:right-4 md:bottom-4 md:left-auto md:w-96 bg-white shadow-2xl rounded-t-2xl md:rounded-2xl z-40 max-h-[85vh] flex flex-col animate-slide-up">
+        
+        {/* HEADER */}
+        <div className="p-4 border-b flex items-center justify-between bg-gray-50 rounded-t-2xl">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            🛒 Giỏ hàng <span className="text-sm font-normal text-gray-500">({totalItems} món)</span>
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-								<div className="flex items-center gap-2">
-									<div className="flex items-center border border-gray-300 rounded">
-										<button
-											onClick={() =>
-												onUpdateQuantity(
-													item.cartItemId || item.id,
-													item.quantity - 1
-												)
-											}
-											className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-										>
-											-
-										</button>
-										<span className="px-3 py-1 text-gray-900">
-											{item.quantity}
-										</span>
-										<button
-											onClick={() =>
-												onUpdateQuantity(
-													item.cartItemId || item.id,
-													item.quantity + 1
-												)
-											}
-											className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-										>
-											+
-										</button>
-									</div>
-									<span className="font-medium text-gray-900 w-16 text-right">
-										${item.total.toFixed(2)}
-									</span>
-									<button
-										onClick={() =>
-											onRemoveItem(
-												item.cartItemId || item.id
-											)
-										}
-										className="text-red-500 hover:text-red-700 ml-2"
-									>
-										<svg
-											className="w-5 h-5"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M6 18L18 6M6 6l12 12"
-											/>
-										</svg>
-									</button>
-								</div>
-							</div>
-						))}
-					</div>
+        {/* BODY - SCROLLABLE */}
+        <div className="overflow-y-auto flex-1 p-4">
+          {cart.map((item) => (
+            <div
+              key={item.cartItemId || item.id}
+              className="flex justify-between py-4 border-b border-dashed border-gray-200 last:border-0"
+            >
+              {/* Thông tin món */}
+              <div className="flex-1 pr-3">
+                <p className="font-bold text-gray-900">{item.name}</p>
+                
+                {/* Modifiers */}
+                {item.modifiers && item.modifiers.length > 0 && (
+                  <div className="mt-1 space-y-0.5">
+                    {item.modifiers.map((mod) => (
+                      <p key={mod.optionId} className="text-xs text-gray-500 flex justify-between">
+                        <span>+ {mod.optionName}</span>
+                        <span>{formatCurrency(mod.priceAdjustment)}</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Note */}
+                {item.note && (
+                  <p className="text-xs text-amber-600 bg-amber-50 inline-block px-2 py-0.5 rounded mt-1 border border-amber-100">
+                    ✍️ {item.note}
+                  </p>
+                )}
+                
+                <p className="text-sm text-gray-500 mt-1">
+                  Đơn giá: {formatCurrency(item.unitPrice)}
+                </p>
+              </div>
 
-					<div className="border-t border-gray-200 pt-4">
-						<div className="flex justify-between items-center mb-4">
-							<span className="text-lg font-bold text-gray-900">
-								Total:
-							</span>
-							<span className="text-2xl font-bold text-amber-600">
-								${cartTotal.toFixed(2)}
-							</span>
-						</div>
+              {/* Điều chỉnh số lượng & Giá tổng */}
+              <div className="flex flex-col items-end gap-2">
+                <span className="font-bold text-gray-900">{formatCurrency(item.total)}</span>
+                
+                <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                  <button
+                    onClick={() => onUpdateQuantity(item.cartItemId || item.id, item.quantity - 1)}
+                    className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+                  <button
+                    onClick={() => onUpdateQuantity(item.cartItemId || item.id, item.quantity + 1)}
+                    className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-white hover:shadow-sm rounded transition-all"
+                  >
+                    +
+                  </button>
+                </div>
 
-						<button
-							onClick={onPlaceOrder}
-							className="w-full py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
-						>
-							🍴 Place Order
-						</button>
+                <button
+                  onClick={() => onRemoveItem(item.cartItemId || item.id)}
+                  className="text-xs text-red-500 hover:text-red-700 underline mt-1"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
 
-						<button
-							onClick={onClearCart}
-							className="w-full mt-2 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-						>
-							Clear All Items
-						</button>
+        {/* FOOTER - TOTAL & ACTIONS */}
+        <div className="p-4 border-t bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] rounded-b-2xl">
+          <div className="flex justify-between items-end mb-4">
+            <span className="text-gray-500 font-medium">Tổng cộng tạm tính</span>
+            <span className="text-2xl font-bold text-orange-600">{formatCurrency(cartTotal)}</span>
+          </div>
 
-						<p className="text-xs text-gray-500 text-center mt-2">
-							Order will be sent to the kitchen immediately
-						</p>
-					</div>
-				</div>
-			</div>
-		</>
-	);
+          <div className="space-y-3">
+            {/* [FIX 2] Nút Place Order có trạng thái Loading */}
+            <button
+              onClick={onPlaceOrder}
+              disabled={orderPlacing} // Disable khi đang gửi
+              className={`w-full py-3.5 px-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all
+                ${orderPlacing 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 active:scale-[0.98]'
+                }`}
+            >
+              {orderPlacing ? (
+                 <>
+                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                   </svg>
+                   Đang gửi đơn...
+                 </>
+              ) : (
+                 <>🍽️ Xác nhận gọi món</>
+              )}
+            </button>
+
+            <button
+              onClick={onClearCart}
+              disabled={orderPlacing}
+              className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              Xóa tất cả món
+            </button>
+          </div>
+          
+          <p className="text-[10px] text-gray-400 text-center mt-3">
+            Món ăn sẽ được gửi xuống bếp ngay sau khi xác nhận
+          </p>
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default CartSidebar;

@@ -11,7 +11,7 @@ const HomeRedirect = () => {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-
+  console.log(user.role); 
   // 2. Phân luồng theo Role
   if (user.role === 'super_admin') {
     return <Navigate to="/admin/users" replace />;
@@ -19,6 +19,10 @@ const HomeRedirect = () => {
   
   if (user.role === 'kitchen') {
     return <Navigate to="/kitchen" replace />;
+  }
+
+  if (user.role === 'waiter') {
+    return <Navigate to="/waiter" replace />;
   }
 
   // Admin & Waiter -> Về trang Bàn

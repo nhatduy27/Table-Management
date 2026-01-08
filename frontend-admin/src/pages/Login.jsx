@@ -32,7 +32,7 @@ const Login = () => {
       } else if (user.role === 'admin') {
         navigate("/tables"); // Admin vào quản lý bàn
       } else if (user.role === 'waiter') {
-        navigate("/tables"); // Waiter tạm thời cũng vào bàn để nhận đơn
+        navigate("/waiter"); // Waiter tạm thời cũng vào bàn để nhận đơn
       } else if (user.role === 'kitchen') {
         navigate("/kitchen");
       } else {

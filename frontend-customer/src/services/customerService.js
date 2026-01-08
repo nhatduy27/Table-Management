@@ -232,78 +232,76 @@ class CustomerService {
 
   // Tạo order
   async createOrder(tableId, totalAmount) {
-    try {
-      const numericTotal = Number(totalAmount);
-     
-      if (isNaN(numericTotal) || numericTotal <= 0) {
-        throw new Error("Tổng tiền không hợp lệ");
-      }
-
-      const orderData = {
-        table_id: tableId,
-        total_amount: numericTotal,
-      };
-
-      const token = this.getToken();
-      const apiExecutor = token ? customerApi : publicApi;
-      const response = await apiExecutor.post("/customer/orders", orderData);
-      
-      return response.data;
-    } catch (error) {
-      throw error;
+    const numericTotal = Number(totalAmount);
+    
+    if (isNaN(numericTotal) || numericTotal <= 0) {
+      throw new Error("Tổng tiền không hợp lệ");
     }
+
+    const orderData = {
+      table_id: tableId,
+      total_amount: numericTotal,
+    };
+
+    const token = this.getToken();
+    const apiExecutor = token ? customerApi : publicApi;
+    const response = await apiExecutor.post("/customer/orders", orderData);
+    
+    return response.data;
   }
 
   // Tạo order với items
-  async createOrderWithItems(tableId, cartItems) {
-    try {     
-      // Tính tổng tiền
-      let totalAmount = 0;
-      
-      cartItems.forEach((item) => {
-        const itemPrice = Number(item.price) || 0;
-        const itemQuantity = Number(item.quantity) || 1;
-        totalAmount += itemPrice * itemQuantity;
-      });
+  async createOrderWithItems(tableId, cartItems) {    
+    // Tính tổng tiền
+    let totalAmount = 0;
+    
+    cartItems.forEach((item) => {
+      const itemPrice = Number(item.price) || 0;
+      const itemQuantity = Number(item.quantity) || 1;
+      totalAmount += itemPrice * itemQuantity;
+    });
 
-      if (isNaN(totalAmount) || totalAmount <= 0) {
-        throw new Error("Tổng tiền không hợp lệ");
-      }
-
-      const orderRes = await this.createOrder(tableId, totalAmount);
-      const orderId = orderRes.data?.id;
-
-      if (!orderId) {
-        throw new Error("Không thể khởi tạo ID đơn hàng");
-      }
-
-      const token = this.getToken();
-      const apiExecutor = token ? customerApi : publicApi;
-
-      const itemPromises = cartItems.map(async (item) => {
-        const itemData = {
-          order_id: orderId,
-          menu_item_id: item.id,
-          quantity: Number(item.quantity) || 1,
-          price_at_order: Number(item.price) || 0,
-          notes: item.notes || "",
-        };
-        return await apiExecutor.post("/customer/order-items", itemData);
-      });
-
-      await Promise.all(itemPromises);
-
-      return {
-        success: true,
-        orderId: orderId,
-        totalAmount: totalAmount,
-        message: "Đặt món thành công",
-        itemsCount: cartItems.length
-      };
-      
-    } catch (error) {
-      throw error;
+    if (isNaN(totalAmount) || totalAmount <= 0) {
+      throw new Error("Tổng tiền không hợp lệ");
     }
+
+    const orderRes = await this.createOrder(tableId, totalAmount);
+    const orderId = orderRes.data?.id;
+
+    if (!orderId) {
+      throw new Error("Không thể khởi tạo ID đơn hàng");
+    }
+
+    const token = this.getToken();
+    const apiExecutor = token ? customerApi : publicApi;
+
+    const itemPromises = cartItems.map(async (item) => {
+      const itemData = {
+        order_id: orderId,
+        menu_item_id: item.id,
+        quantity: Number(item.quantity) || 1,
+        price_at_order: Number(item.price) || 0,
+        notes: item.notes || "",
+      };
+      return await apiExecutor.post("/customer/order-items", itemData);
+    });
+
+    await Promise.all(itemPromises);
+
+    return {
+      success: true,
+      message: "Gửi món thành công", // Sửa message theo ý bạn
+      data: {
+          id: orderId,
+          status: 'pending',        // [QUAN TRỌNG] Phải có cái này để hiện thanh màu vàng
+          totalAmount: totalAmount,
+          table_id: tableId,
+          items: cartItems.map(item => ({ // Map lại items để hiển thị chi tiết
+              ...item,
+              menuItem: { name: item.name } // Format cho khớp hiển thị
+          }))
+      }
+    };
   }
 
   // 12. Lấy order với items
@@ -352,6 +350,87 @@ class CustomerService {
     } catch (error) {
       console.error("Lỗi getOrders:", error);
       throw error;
+    }
+  }
+
+  // [MỚI] Hàm lấy chi tiết đơn hàng (Dùng cho OrderTracking)
+  async getOrderById(orderId) {
+    try {
+      // Tận dụng hàm getOrderWithItems bạn đã viết sẵn
+      const result = await this.getOrderWithItems(orderId);
+
+      if (result.success) {
+        // Format lại dữ liệu để khớp với mong đợi của OrderTracking component
+        // Gộp 'order' và 'items' thành 1 object data duy nhất
+        return {
+          success: true,
+          data: {
+            ...result.order,      // Spread thông tin order (table_id, total_amount...)
+            items: result.items   // Gắn thêm mảng items vào
+          }
+        };
+      }
+      
+      return { success: false, message: result.message || "Không tìm thấy đơn hàng" };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  // [MỚI] Hàm gọi thêm món vào đơn hàng đã có
+  async addItemsToOrder(orderId, cartItems) {
+    try {
+      const token = this.getToken();
+      const apiExecutor = token ? customerApi : publicApi;
+
+      // Duyệt qua từng món trong giỏ và gửi lên server
+      const itemPromises = cartItems.map(async (item) => {
+        const itemData = {
+          order_id: orderId,
+          menu_item_id: item.id,
+          quantity: Number(item.quantity) || 1,
+          price_at_order: Number(item.price) || 0,
+          notes: item.notes || "",
+        };
+        // Gọi API Backend: POST /customer/order-items
+        return await apiExecutor.post("/customer/order-items", itemData);
+      });
+
+      // Chờ tất cả các món được gửi xong
+      await Promise.all(itemPromises);
+
+      return {
+        success: true,
+        message: "Gọi thêm món thành công",
+        // Trả về data giả lập để MenuPage không bị lỗi undefined
+        // Dữ liệu thật sẽ được Socket cập nhật ngay lập tức sau đó
+        data: {
+            id: orderId,
+            status: 'pending' // Quan trọng: Giữ status để thanh Tracking không bị mất
+        }
+      };
+
+    } catch (error) {
+      console.error("Add items error:", error);
+      throw new Error(error.response?.data?.message || "Không thể gọi thêm món");
+    }
+  }
+
+  // [MỚI] Hàm yêu cầu thanh toán
+  async requestPayment(orderId) {
+    try {
+      const token = this.getToken();
+      const apiExecutor = token ? customerApi : publicApi;
+
+      // Gọi API Backend (Bạn cần đảm bảo Backend có route này)
+      const response = await apiExecutor.post(`/customer/orders/${orderId}/request-payment`);
+      return response.data;
+    } catch (error) {
+      console.error("Request payment error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.error || error.message || "Không thể gửi yêu cầu thanh toán"
+      };
     }
   }
 

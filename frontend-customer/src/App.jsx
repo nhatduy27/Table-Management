@@ -16,6 +16,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyForgotPasswordOTPPage from "./pages/VerifyForgotPasswordOTPPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         {/* Customer-facing menu route - NHẬN QUERY PARAMETERS */}
         <Route path="/menu" element={<MenuPage />} />
+
         
         {/* Customer auth routes */}
         <Route path="/customer/login" element={<CustomerLoginPage />} />

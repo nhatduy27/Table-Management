@@ -15,6 +15,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import SuperAdminRoute from "./components/common/SuperAdminRoute";
 import HomeRedirect from "./components/common/HomeRedirect";
 import EmployeeManagement from "./pages/admin/EmployeeManagement";
+import WaiterPage from "./pages/waiter/WaiterPage";
 
 import {
   CategoryList,
@@ -43,6 +44,9 @@ function App() {
 
         {/* --- KHU VỰC BẢO VỆ (PHẢI CÓ TOKEN MỚI ĐƯỢC VÀO) --- */}
         <Route element={<ProtectedRoute />}>
+
+          {/* ROUTE CHO WAITER */}
+          <Route path="/waiter" element={<WaiterPage />} />
           
           <Route element={<Layout />}>
             {/* - Nếu chưa có token: ProtectedRoute ở trên đã đá về /login rồi */}

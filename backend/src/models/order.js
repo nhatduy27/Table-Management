@@ -38,6 +38,12 @@ Order.init(
         min: 0
       }
     },
+
+    status: {
+      type: DataTypes.STRING(50), 
+      defaultValue: 'pending',
+      allowNull: false
+    },
     
     ordered_at: {
       type: DataTypes.DATE,
