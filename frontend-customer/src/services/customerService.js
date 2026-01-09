@@ -319,6 +319,7 @@ class CustomerService {
           quantity: Number(item.quantity) || 1,
           price_at_order: Number(item.price) || 0,
           notes: item.notes || "",
+          modifiers: item.modifiers
         };
         return await apiExecutor.post("/customer/order-items", itemData);
       });

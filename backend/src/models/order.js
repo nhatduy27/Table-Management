@@ -53,10 +53,17 @@ Order.init(
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: "received",
-      validate: {
-        isIn: [["received", "preparing", "ready", "served"]],
-      },
+      type: DataTypes.ENUM(
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "served",
+        "payment",
+        "completed",
+        "cancelled"
+      ),
+      defaultValue: "pending",
     },
   },
   {
@@ -83,6 +90,11 @@ Order.associate = (models) => {
   Order.hasMany(models.OrderItem, {
     foreignKey: "order_id",
     as: "items",
+  });
+
+  Order.belongsTo(models.Table, {
+    foreignKey: "table_id",
+    as: "table",
   });
 };
 

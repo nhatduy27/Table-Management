@@ -39,7 +39,9 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "received":
+      case "pending":
+        return "bg-gray-100 text-gray-800";
+      case "confirmed":
         return "bg-blue-100 text-blue-800";
       case "preparing":
         return "bg-yellow-100 text-yellow-800";
@@ -47,8 +49,10 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
         return "bg-green-100 text-green-800";
       case "served":
         return "bg-green-300 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
+      case "payment":
+        return "bg-purple-100 text-purple-800";
+      case "completed":
+        return "bg-blue-500 text-white";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -56,11 +60,13 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
 
   const getStatusLabel = (status) => {
     const statusMap = {
-      received: "Received",
+      pending: "Pending",
+      confirmed: "Confirmed",
       preparing: "Preparing",
       ready: "Ready",
       served: "Served",
-      cancelled: "Cancelled",
+      payment: "Payment",
+      completed: "Completed",
     };
     return statusMap[status] || status;
   };
@@ -95,26 +101,28 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {orders.map((order, index) => (
                 <div
-                  key={order.id}
+                  key={order?.id || index}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h3 className="font-semibold text-gray-800">
-                        Order #{order.id.slice(0, 8)}
+                        Order #{order?.id?.slice(0, 8) || "N/A"}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {formatDate(order.ordered_at)}
+                        {order?.ordered_at
+                          ? formatDate(order.ordered_at)
+                          : "N/A"}
                       </p>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                        order.status
+                        order?.status
                       )}`}
                     >
-                      {getStatusLabel(order.status)}
+                      {getStatusLabel(order?.status)}
                     </span>
                   </div>
 
@@ -126,11 +134,11 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
                         {new Intl.NumberFormat("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
-                        }).format(order.total_amount)}
+                        }).format(order?.total_amount || 0)}
                       </span>
                     </p>
                   </div>
-                  
+
                   {/* Các items trong order */}
                   {order.items && order.items.length > 0 && (
                     <div className="border-t border-gray-100 pt-3 mt-3">

@@ -52,13 +52,13 @@ OrderItemModifier.associate = (models) => {
   // Quan hệ với OrderItem
   OrderItemModifier.belongsTo(models.OrderItem, {
     foreignKey: "order_item_id",
-    as: "orderItem",
+    as: "order_item",
   });
 
   // Quan hệ với ModifierOption
   OrderItemModifier.belongsTo(models.ModifierOption, {
     foreignKey: "modifier_option_id",
-    as: "modifierOption",
+    as: "modifier_option",
   });
 };
 
