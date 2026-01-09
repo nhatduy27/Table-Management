@@ -40,7 +40,7 @@ Order.init(
     },
 
     status: {
-      type: DataTypes.STRING(50), 
+      type: DataTypes.ENUM('pending', 'preparing', 'ready', 'served', 'payment', 'completed', 'cancelled'),
       defaultValue: 'pending',
       allowNull: false
     },
@@ -75,5 +75,20 @@ Order.init(
     ]
   }
 );
+
+Order.associate = (models) => {
+  // Order thuộc về 1 Bàn
+  Order.belongsTo(models.Table, { 
+    foreignKey: 'table_id', 
+    as: 'table' 
+  });
+
+  // Order có nhiều Món
+  // [QUAN TRỌNG]: as 'items' để khớp với include trong Controller
+  Order.hasMany(models.OrderItem, { 
+    foreignKey: 'order_id', 
+    as: 'items' 
+  });
+};
 
 export default Order;

@@ -1,12 +1,14 @@
+// src/controllers/client/orderItem.controller.js
 import OrderItemService from "../../services/orderItem.service.js";
 import db from '../../models/index.js';
+const { Order, OrderItem, OrderItemModifier, MenuItem, ModifierOption, Table } = db;
 
-// POST: Tạo mới OrderItem
+// POST: Tạo mới OrderItem (Khách gọi thêm 1 món lẻ)
 export const createOrderItem = async (req, res) => {
     try {
         const { order_id, menu_item_id } = req.body;
 
-        // Validate cơ bản tại controller
+        // 1. Validate cơ bản
         if (!order_id || !menu_item_id) {
             return res.status(400).json({
                 success: false,
@@ -14,51 +16,65 @@ export const createOrderItem = async (req, res) => {
             });
         }
 
+        // 2. Gọi Service tạo món (Lưu ý: Service này phải xử lý việc lưu status='pending')
+        // Nếu Service chưa xử lý Modifiers, bạn nên cân nhắc chuyển logic tạo vào đây hoặc update Service
         const result = await OrderItemService.createOrderItem(req.body);
 
-        // 2. [NEW] Lấy thông tin chi tiết của Order để gửi Socket cho Waiter
-        // (Chúng ta cần join bảng Tables và OrderItems để Waiter thấy tên bàn và món ăn)
-        const fullOrder = await db.Order.findOne({
+        // 3. [QUAN TRỌNG] Lấy lại toàn bộ thông tin đơn hàng để bắn Socket
+        // Phải lấy đủ: Table, Items, MenuItem, Modifiers
+        const fullOrder = await Order.findOne({
             where: { id: order_id },
             include: [
-                { model: db.Table, as: 'table' }, // Giả sử bạn đã setup association 'table'
                 { 
-                    model: db.OrderItem, 
+                    model: Table, 
+                    as: 'table',
+                    attributes: ['id', 'table_number'] 
+                }, 
+                { 
+                    model: OrderItem, 
                     as: 'items',
-                    include: [{ model: db.MenuItem, as: 'menuItem' }] // Để lấy tên món
+                    include: [
+                        { 
+                            model: MenuItem, 
+                            as: 'menu_item', // SỬA LẠI: Phải khớp với model (menu_item)
+                            attributes: ['name', 'price']
+                        },
+                        // 👇 THÊM: Lấy Modifier để Waiter biết khách chọn gì
+                        {
+                            model: OrderItemModifier,
+                            as: 'modifiers',
+                            include: [{
+                                model: ModifierOption,
+                                as: 'modifier_option',
+                                attributes: ['name', 'price_adjustment']
+                            }]
+                        }
+                    ]
                 }
             ]
         });
 
         if (fullOrder) {
-            // Format dữ liệu cho khớp với Frontend WaiterDashboard mong đợi
-            const socketPayload = {
-                _id: fullOrder.id,
-                tableNumber: fullOrder.table ? fullOrder.table.table_number : 'Unknown', // Sửa 'number' theo tên cột thực tế trong bảng Table
-                status: fullOrder.status || 'pending',
-                totalAmount: fullOrder.total_amount,
-                createdAt: fullOrder.createdAt,
-                items: fullOrder.items.map(item => ({
-                    name: item.menuItem ? item.menuItem.name : 'Món lạ',
-                    quantity: item.quantity,
-                    price: item.price_at_order || (item.menuItem ? item.menuItem.price : 0),
-                    status: 'pending' // Món mới thêm
-                }))
-            };
-
-            // [NEW] Bắn sự kiện sang Frontend
-            req.io.emit('new_order', socketPayload);
-            console.log(">>> Đã gửi socket new_order cho Waiter");
+            // 4. Bắn Socket cho Waiter
+            // Frontend WaiterDashboard đang lắng nghe sự kiện 'new_order_request' (hoặc 'new_order' tùy bạn thống nhất)
+            // Gửi nguyên cục fullOrder, Frontend tự map sẽ chuẩn hơn là map tay ở đây
+            
+            req.io.emit('new_order_request', {
+                ...fullOrder.toJSON(), // Chuyển sang JSON object thuần
+                message: `Bàn ${fullOrder.table?.table_number} vừa gọi thêm món!`
+            });
+            
+            console.log(`>>> Socket sent: new_order_request for Table ${fullOrder.table?.table_number}`);
         }
 
         res.status(201).json({
             success: true,
-            message: 'Thêm món ăn vào đơn hàng thành công',
+            message: 'Thêm món ăn thành công',
             data: fullOrder
         });
+
     } catch (error) {
         console.error('Lỗi Controller Create:', error);
-
         res.status(500).json({
             success: false,
             message: 'Lỗi server khi thêm món ăn',
@@ -87,4 +103,3 @@ export const getOrderItemsByOrderId = async (req, res) => {
         });
     }
 };
-

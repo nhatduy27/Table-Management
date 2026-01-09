@@ -27,6 +27,13 @@ OrderItem.init(
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
     },
+
+    status: {
+      type: DataTypes.ENUM('pending', 'preparing', 'ready', 'served', 'cancelled'),
+      defaultValue: 'pending',
+      allowNull: false
+    },
+    
     notes: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -41,20 +48,26 @@ OrderItem.init(
   }
 );
 
-// Định nghĩa associate theo form của ModifierOption
 OrderItem.associate = (models) => {
-  // Quan hệ với đơn hàng
+  // Thuộc về Order
   OrderItem.belongsTo(models.Order, { 
     foreignKey: 'order_id', 
     as: 'order' 
   });
 
-  // Quan hệ với món ăn
+  // Thuộc về Menu Item (Món gốc)
+  // [QUAN TRỌNG]: as 'menu_item' (snake_case)
   OrderItem.belongsTo(models.MenuItem, { 
     foreignKey: 'menu_item_id', 
     as: 'menu_item',
     constraints: false 
   });
-};
 
+  // Có nhiều Modifier (Ít đường, nhiều đá...)
+  // [QUAN TRỌNG]: as 'modifiers' để khớp với include trong Controller
+  OrderItem.hasMany(models.OrderItemModifier, {
+    foreignKey: 'order_item_id',
+    as: 'modifiers'
+  });
+};
 export default OrderItem;

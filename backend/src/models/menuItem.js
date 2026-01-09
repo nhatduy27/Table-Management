@@ -92,6 +92,9 @@ MenuItem.init(
 );
 
 MenuItem.associate = (models) => {
+  MenuItem.hasMany(models.OrderItem, { 
+    foreignKey: 'menu_item_id' 
+  });
   
   MenuItem.belongsTo(models.MenuCategory, {
     foreignKey: 'category_id',
