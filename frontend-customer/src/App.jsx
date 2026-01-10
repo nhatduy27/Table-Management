@@ -16,11 +16,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyForgotPasswordOTPPage from "./pages/VerifyForgotPasswordOTPPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-<<<<<<< HEAD
-
-=======
 import AuthCallbackPage from "./pages/AuthCallbackPage";
->>>>>>> ef3799b465446b0d1f0c3ea2ecae782c5682aaa8
 import "./App.css";
 
 function App() {
