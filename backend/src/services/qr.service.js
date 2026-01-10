@@ -52,7 +52,7 @@ export class QRService {
 	 */
 	static generateQRUrl(tableId, token) {
 		const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-		return `${baseUrl}/#/menu?table=${tableId}&token=${token}`;
+		return `${baseUrl}/menu?table=${tableId}&token=${token}`;
 	}
 
 	/**

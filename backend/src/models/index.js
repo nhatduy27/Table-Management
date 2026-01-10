@@ -31,11 +31,10 @@ const db = {
 };
 
 // 3. CHẠY VÒNG LẶP LIÊN KẾT (Magic Loop)
-Object.keys(db).forEach(modelName => {
+Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
-
 
 export default db;

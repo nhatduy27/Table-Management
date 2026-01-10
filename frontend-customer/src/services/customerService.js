@@ -13,7 +13,9 @@ class CustomerService {
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.error || error.message || "Đăng ký thất bại");
+      throw new Error(
+        error.response?.data?.error || error.message || "Đăng ký thất bại"
+      );
     }
   }
 
@@ -33,14 +35,14 @@ class CustomerService {
           customerId: response.data.data?.customerId,
           email: response.data.data?.email,
           username: response.data.data?.username,
-          message: response.data.message || "Vui lòng xác thực email"
+          message: response.data.message || "Vui lòng xác thực email",
         };
       }
 
       // Nếu đăng nhập thành công
       if (response.data.success && response.data.data) {
         const { customer, accessToken } = response.data.data;
-        
+
         localStorage.setItem("customer_token", accessToken);
         localStorage.setItem("customer_info", JSON.stringify(customer));
 
@@ -48,14 +50,15 @@ class CustomerService {
           success: true,
           customer,
           accessToken,
-          message: response.data.message
+          message: response.data.message,
         };
       }
 
       throw new Error(response.data.error || "Đăng nhập thất bại");
-
     } catch (error) {
-      throw new Error(error.response?.data?.error || error.message || "Đăng nhập thất bại");
+      throw new Error(
+        error.response?.data?.error || error.message || "Đăng nhập thất bại"
+      );
     }
   }
 
@@ -65,14 +68,17 @@ class CustomerService {
       const response = await publicApi.post("/customer/verify-email", {
         customerId,
         email,
-        otp
+        otp,
       });
       return response.data;
     } catch (error) {
       console.error("Verify OTP error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || "Xác thực OTP thất bại"
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Xác thực OTP thất bại",
       };
     }
   }
@@ -82,14 +88,17 @@ class CustomerService {
     try {
       const response = await publicApi.post("/customer/resend-otp", {
         customerId,
-        email
+        email,
       });
       return response.data;
     } catch (error) {
       console.error("Resend OTP error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || "Không thể gửi lại OTP"
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Không thể gửi lại OTP",
       };
     }
   }
@@ -98,14 +107,14 @@ class CustomerService {
   async checkVerificationStatus(customerId, email) {
     try {
       const response = await publicApi.get("/customer/check-verification", {
-        params: { customerId, email }
+        params: { customerId, email },
       });
       return response.data;
     } catch (error) {
       console.error("Check verification error:", error);
       return {
         success: false,
-        error: error.message || "Không thể kiểm tra trạng thái xác thực"
+        error: error.message || "Không thể kiểm tra trạng thái xác thực",
       };
     }
   }
@@ -114,14 +123,14 @@ class CustomerService {
   async checkEmailExists(email) {
     try {
       const response = await publicApi.get("/customer/check-email", {
-        params: { email }
+        params: { email },
       });
       return response.data;
     } catch (error) {
       console.error("Check email error:", error);
       return {
         success: false,
-        error: error.message || "Không thể kiểm tra email"
+        error: error.message || "Không thể kiểm tra email",
       };
     }
   }
@@ -131,15 +140,19 @@ class CustomerService {
   // Gửi OTP quên mật khẩu
   async sendForgotPasswordOTP(email) {
     try {
-      const response = await publicApi.post("/customer/forgot-password/send-otp", {
-        email
-      });
+      const response = await publicApi.post(
+        "/customer/forgot-password/send-otp",
+        {
+          email,
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Send forgot password OTP error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || "Không thể gửi OTP"
+        error:
+          error.response?.data?.error || error.message || "Không thể gửi OTP",
       };
     }
   }
@@ -147,16 +160,22 @@ class CustomerService {
   // Xác thực OTP quên mật khẩu
   async verifyForgotPasswordOTP(email, otp) {
     try {
-      const response = await publicApi.post("/customer/forgot-password/verify-otp", {
-        email,
-        otp
-      });
+      const response = await publicApi.post(
+        "/customer/forgot-password/verify-otp",
+        {
+          email,
+          otp,
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Verify forgot password OTP error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || "Xác thực OTP thất bại"
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Xác thực OTP thất bại",
       };
     }
   }
@@ -168,14 +187,17 @@ class CustomerService {
         email,
         otp,
         newPassword,
-        confirmPassword
+        confirmPassword,
       });
       return response.data;
     } catch (error) {
       console.error("Reset password error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || "Không thể đặt lại mật khẩu"
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Không thể đặt lại mật khẩu",
       };
     }
   }
@@ -186,12 +208,16 @@ class CustomerService {
       if (!this.isLoggedIn()) {
         throw new Error("Chưa đăng nhập");
       }
-      
+
       const response = await customerApi.get("/customer/me");
       return response.data;
     } catch (error) {
       console.error("Get me error:", error);
-      throw new Error(error.response?.data?.error || error.message || "Không thể lấy thông tin");
+      throw new Error(
+        error.response?.data?.error ||
+          error.message ||
+          "Không thể lấy thông tin"
+      );
     }
   }
 
@@ -201,12 +227,16 @@ class CustomerService {
       if (!this.isLoggedIn()) {
         throw new Error("Chưa đăng nhập");
       }
-      
+
       const response = await customerApi.put("/customer/me", updateData);
       return response.data;
     } catch (error) {
       console.error("Update me error:", error);
-      throw new Error(error.response?.data?.error || error.message || "Không thể cập nhật thông tin");
+      throw new Error(
+        error.response?.data?.error ||
+          error.message ||
+          "Không thể cập nhật thông tin"
+      );
     }
   }
 
@@ -216,15 +246,17 @@ class CustomerService {
       if (!this.isLoggedIn()) {
         throw new Error("Chưa đăng nhập");
       }
-      
+
       const response = await customerApi.put("/customer/change-password", {
         oldPassword,
-        newPassword
+        newPassword,
       });
       return response.data;
     } catch (error) {
       console.error("Change password error:", error);
-      throw new Error(error.response?.data?.error || error.message || "Không thể đổi mật khẩu");
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể đổi mật khẩu"
+      );
     }
   }
 
@@ -282,6 +314,7 @@ class CustomerService {
         quantity: Number(item.quantity) || 1,
         price_at_order: Number(item.price) || 0,
         notes: item.notes || "",
+        modifiers: item.modifiers
       };
       return await apiExecutor.post("/customer/order-items", itemData);
     });
@@ -304,34 +337,60 @@ class CustomerService {
     };
   }
 
-  // 12. Lấy order với items
-  async getOrderWithItems(orderId) {
-    try {   
+  async getOrdersByIds(orderIds) {
+    try {
       const token = this.getToken();
       const apiExecutor = token ? customerApi : publicApi;
 
-      const response = await apiExecutor.get(`/customer/order-items/order/${orderId}`);
-      
+      const orderPromises = orderIds.map(async (orderId) => {
+        const response = await apiExecutor.get(`/customer/orders/${orderId}`);
+        return response.data;
+      });
+
+      const results = await Promise.all(orderPromises);
+
+      return {
+        success: true,
+        data: results.map((r) => r.data || r).flat(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Unable to fetch order information",
+        data: [],
+      };
+    }
+  }
+
+  // 12. Lấy order với items
+  async getOrderWithItems(orderId) {
+    try {
+      const token = this.getToken();
+      const apiExecutor = token ? customerApi : publicApi;
+
+      const response = await apiExecutor.get(
+        `/customer/order-items/order/${orderId}`
+      );
+
       const items = response.data.data || [];
 
       if (!response.data.success) {
-        throw new Error(response.data.message || 'Không thể lấy danh sách món');
+        throw new Error(response.data.message || "Không thể lấy danh sách món");
       }
       const orderInfo = items.length > 0 ? items[0].Order : { id: orderId };
 
       return {
         success: true,
-        order: orderInfo, 
-        items: items,  
-        message: 'Lấy dữ liệu thành công'
+        order: orderInfo,
+        items: items,
+        message: "Lấy dữ liệu thành công",
       };
-      
     } catch (error) {
       return {
         success: false,
         message: error.message,
         order: null,
-        items: []
+        items: [],
       };
     }
   }
@@ -472,7 +531,10 @@ class CustomerService {
         return false;
       }
 
-      const response = await this.checkVerificationStatus(customer.uid, customer.email);
+      const response = await this.checkVerificationStatus(
+        customer.uid,
+        customer.email
+      );
       return response.success && response.data?.isVerified;
     } catch (error) {
       console.error("Check email verified error:", error);
@@ -489,7 +551,7 @@ class CustomerService {
       }
 
       const response = await publicApi.post("/customer/refresh-token", {
-        token
+        token,
       });
 
       if (response.data.success && response.data.data?.accessToken) {

@@ -14,12 +14,10 @@ const tableService = {
     return response.data;
   },
 
-
   getTableNumberById: async (id) => {
     const response = await publicApi.get(`/public/name/${id}`);
     return response.data;
   },
-
 
   // Create new table
   createTable: async (tableData) => {
@@ -97,9 +95,7 @@ const tableService = {
     let filtered = [...tables];
 
     if (filters.status && filters.status !== "all") {
-      filtered = filtered.filter(
-        (table) => table.status === filters.status
-      );
+      filtered = filtered.filter((table) => table.status === filters.status);
     }
 
     if (filters.location && filters.location !== "all") {
@@ -150,8 +146,5 @@ const tableService = {
     });
   },
 };
-
-
-
 
 export default tableService;

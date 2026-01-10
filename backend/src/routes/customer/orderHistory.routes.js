@@ -1,7 +1,8 @@
 import express from "express";
 import {
     createOrder,
-    getMyOrders
+    getMyOrders,
+    getOrderById
 } from "../../controllers/customer/orderHistory.controller.js"
 import authCustomer from "../../middlewares/authCustomer.middleware.js";
 
@@ -14,5 +15,8 @@ router.post("/", createOrder);
 
 // GET /api/customer/orders - Lấy danh sách orders
 router.get("/", getMyOrders);
+
+// GET /api/customer/orders/:id
+router.get("/:id", getOrderById);
 
 export default router;

@@ -11,32 +11,32 @@ Order.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    
+
     customer_id: {
       type: DataTypes.UUID,
       allowNull: true, //cho phép null trường hợp không đăng nhập
       references: {
-        model: 'customers',
-        key: 'uid'
-      }
+        model: "customers",
+        key: "uid",
+      },
     },
-   
+
     table_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'tables',
-        key: 'id'
-      }
+        model: "tables",
+        key: "id",
+      },
     },
-    
+
     total_amount: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
-        min: 0
-      }
+        min: 0,
+      },
     },
 
     status: {
@@ -55,6 +55,22 @@ Order.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+
+    status: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      type: DataTypes.ENUM(
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "served",
+        "payment",
+        "completed",
+        "cancelled"
+      ),
+      defaultValue: "pending",
+    },
   },
   {
     sequelize,
@@ -64,30 +80,27 @@ Order.init(
     updatedAt: "updated_at",
     indexes: [
       {
-        fields: ['customer_id'] 
+        fields: ["customer_id"],
       },
       {
-        fields: ['table_id']
+        fields: ["table_id"],
       },
       {
-        fields: ['ordered_at']
-      }
-    ]
+        fields: ["ordered_at"],
+      },
+    ],
   }
 );
 
 Order.associate = (models) => {
-  // Order thuộc về 1 Bàn
-  Order.belongsTo(models.Table, { 
-    foreignKey: 'table_id', 
-    as: 'table' 
+  Order.hasMany(models.OrderItem, {
+    foreignKey: "order_id",
+    as: "items",
   });
 
-  // Order có nhiều Món
-  // [QUAN TRỌNG]: as 'items' để khớp với include trong Controller
-  Order.hasMany(models.OrderItem, { 
-    foreignKey: 'order_id', 
-    as: 'items' 
+  Order.belongsTo(models.Table, {
+    foreignKey: "table_id",
+    as: "table",
   });
 };
 

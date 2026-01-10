@@ -49,25 +49,23 @@ OrderItem.init(
 );
 
 OrderItem.associate = (models) => {
-  // Thuộc về Order
-  OrderItem.belongsTo(models.Order, { 
-    foreignKey: 'order_id', 
-    as: 'order' 
+  // Quan hệ với đơn hàng
+  OrderItem.belongsTo(models.Order, {
+    foreignKey: "order_id",
+    as: "order",
   });
 
-  // Thuộc về Menu Item (Món gốc)
-  // [QUAN TRỌNG]: as 'menu_item' (snake_case)
-  OrderItem.belongsTo(models.MenuItem, { 
-    foreignKey: 'menu_item_id', 
-    as: 'menu_item',
-    constraints: false 
+  // Quan hệ với món ăn
+  OrderItem.belongsTo(models.MenuItem, {
+    foreignKey: "menu_item_id",
+    as: "menu_item",
+    constraints: false,
   });
 
-  // Có nhiều Modifier (Ít đường, nhiều đá...)
-  // [QUAN TRỌNG]: as 'modifiers' để khớp với include trong Controller
+  // Quan hệ với OrderItemModifier
   OrderItem.hasMany(models.OrderItemModifier, {
-    foreignKey: 'order_item_id',
-    as: 'modifiers'
+    foreignKey: "order_item_id",
+    as: "modifiers",
   });
-};
+}
 export default OrderItem;

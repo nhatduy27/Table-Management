@@ -4,18 +4,19 @@ import {
   Routes,
   Route,
   Navigate,
-  Outlet
+  Outlet,
 } from "react-router-dom"; // Thêm Outlet
 import Layout from "./components/layout/Layout";
 import TableList from "./components/tables/TableList";
 import TableForm from "./components/tables/TableForm";
 import QRCodePage from "./components/tables/QRCodePage";
 import Login from "./pages/Login";
-import UserManagement from "./pages/admin/UserManagement"; 
+import UserManagement from "./pages/admin/UserManagement";
 import SuperAdminRoute from "./components/common/SuperAdminRoute";
 import HomeRedirect from "./components/common/HomeRedirect";
 import EmployeeManagement from "./pages/admin/EmployeeManagement";
 import WaiterPage from "./pages/waiter/WaiterPage";
+import Kitchen from "./pages/Kitchen";
 
 import {
   CategoryList,
@@ -48,6 +49,9 @@ function App() {
           {/* ROUTE CHO WAITER */}
           <Route path="/waiter" element={<WaiterPage />} />
           
+          {/* Kitchen Display - Full screen without Layout */}
+          <Route path="/kitchen" element={<Kitchen />} />
+
           <Route element={<Layout />}>
             {/* - Nếu chưa có token: ProtectedRoute ở trên đã đá về /login rồi */}
             <Route path="/" element={<HomeRedirect />} />
@@ -63,7 +67,10 @@ function App() {
             <Route path="/admin/menu/items" element={<MenuItemList />} />
             <Route path="/admin/menu/items/new" element={<MenuItemForm />} />
             <Route path="/admin/menu/items/:id" element={<MenuItemForm />} />
-            <Route path="/admin/menu/modifiers" element={<ModifierGroupList />} />
+            <Route
+              path="/admin/menu/modifiers"
+              element={<ModifierGroupList />}
+            />
             {/* Employee Management */}
             <Route path="/admin/employees" element={<EmployeeManagement />} />
 
@@ -71,11 +78,10 @@ function App() {
             <Route element={<SuperAdminRoute />}>
               <Route path="/admin/users" element={<UserManagement />} />
             </Route>
-            
+
             {/* 404 Route... (Giữ nguyên code cũ của bạn đoạn này) */}
             <Route path="*" element={<div>404 Not Found</div>} />
           </Route>
-
         </Route>
       </Routes>
     </Router>
