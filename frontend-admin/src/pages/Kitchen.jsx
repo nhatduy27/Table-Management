@@ -1,7 +1,10 @@
 // src/pages/Kitchen.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { io } from "socket.io-client";
 import kitchenService from "../services/kitchenService";
 import { OrderCard, WARNING_TIME, OVERDUE_TIME } from "../components/kitchen";
+
+const SOCKET_URL = "http://localhost:5000";
 
 // Notification sound (base64 encoded short beep)
 const NOTIFICATION_SOUND =
@@ -23,7 +26,7 @@ const Kitchen = () => {
   const [filter, setFilter] = useState("all"); // 'all', 'pending', 'preparing', 'ready'
 
   const audioRef = useRef(null);
-  const previousOrdersRef = useRef([]);
+  const socketRef = useRef(null);
 
   // Khởi tạo audio
   useEffect(() => {
@@ -46,24 +49,13 @@ const Kitchen = () => {
     try {
       const response = await kitchenService.getKitchenOrders();
       if (response.success) {
-        const newOrders = response.data;
-
-        // Kiểm tra có order mới không
-        const previousIds = new Set(previousOrdersRef.current.map((o) => o.id));
-        const hasNewOrder = newOrders.some((o) => !previousIds.has(o.id));
-
-        if (hasNewOrder && previousOrdersRef.current.length > 0) {
-          playNotificationSound();
-        }
-
-        previousOrdersRef.current = newOrders;
-        setOrders(newOrders);
+        setOrders(response.data);
       }
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError("Không thể tải danh sách đơn hàng");
     }
-  }, [playNotificationSound]);
+  }, []);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
@@ -77,7 +69,7 @@ const Kitchen = () => {
     }
   }, []);
 
-  // Fetch data initially and set up polling
+  // Fetch data initially and setup Socket.IO
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -87,14 +79,44 @@ const Kitchen = () => {
 
     loadData();
 
-    // Poll for updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchOrders();
-      fetchStats();
-    }, 5000);
+    // Setup Socket.IO connection
+    socketRef.current = io(SOCKET_URL);
 
-    return () => clearInterval(interval);
-  }, [fetchOrders, fetchStats]);
+    // Lắng nghe khi có đơn mới từ khách
+    socketRef.current.on("new_order_request", (newOrder) => {
+      console.log("🔔 Kitchen: Đơn mới từ khách:", newOrder);
+      playNotificationSound();
+
+      setOrders((prevOrders) => {
+        const exists = prevOrders.find((o) => o.id === newOrder.id);
+        if (exists) {
+          return prevOrders.map((o) => (o.id === newOrder.id ? newOrder : o));
+        } else {
+          return [newOrder, ...prevOrders];
+        }
+      });
+
+      fetchStats();
+    });
+
+    // Lắng nghe khi trạng thái order được cập nhật
+    socketRef.current.on("order_status_updated", (updatedOrder) => {
+      console.log("📝 Kitchen: Order updated:", updatedOrder);
+
+      setOrders((prevOrders) =>
+        prevOrders.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+      );
+
+      fetchStats();
+    });
+
+    // Cleanup khi component unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [fetchOrders, fetchStats, playNotificationSound]);
 
   // Update order status
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -146,10 +168,10 @@ const Kitchen = () => {
     .filter((o) => {
       if (filter === "all") {
         // Ẩn các order đã ready khỏi tab "Tất cả"
-        return o.status !== "ready";
+        return o.status !== "ready" && o.status !== "pending";
       }
-      if (filter === "pending") {
-        return o.status === "pending" || o.status === "confirmed";
+      if (filter === "confirmed") {
+        return o.status === "confirmed";
       }
       return o.status === filter;
     })
@@ -211,7 +233,7 @@ const Kitchen = () => {
           <div className="flex gap-1">
             {[
               { key: "all", label: "Tất cả" },
-              { key: "pending", label: "Chờ xử lý" },
+              { key: "confirmed", label: "Đã xác nhận" },
               { key: "preparing", label: "Đang làm" },
               { key: "ready", label: "Sẵn sàng" },
             ].map((tab) => (

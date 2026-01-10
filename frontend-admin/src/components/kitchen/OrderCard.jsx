@@ -59,7 +59,7 @@ const OrderCard = ({ order, onStartOrder, onReadyOrder, isUpdating }) => {
       className={`bg-white rounded-lg shadow-md border-2 ${cardBorderColors[timeStatus]} overflow-hidden transition-all duration-300 hover:shadow-lg h-[420px] flex flex-col`}
     >
       {/* Header */}
-      <div className="bg-gray-800 text-white px-4 py-3 flex-shrink-0">
+      <div className="bg-gray-800 text-white px-4 py-3 shrink-0">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="font-bold text-lg">Order #{shortOrderId}</h3>
@@ -79,7 +79,7 @@ const OrderCard = ({ order, onStartOrder, onReadyOrder, isUpdating }) => {
       </div>
 
       {/* Timer */}
-      <div className="px-4 py-2 border-b border-gray-100 flex-shrink-0">
+      <div className="px-4 py-2 border-b border-gray-100 shrink-0">
         <OrderTimer orderedAt={order.ordered_at} status={order.status} />
         {timeStatus === "overdue" && (
           <div className="text-red-600 text-sm font-semibold mt-1 flex items-center gap-1">
@@ -109,7 +109,7 @@ const OrderCard = ({ order, onStartOrder, onReadyOrder, isUpdating }) => {
             >
               {/* Checkbox - chỉ hiện khi status là preparing */}
               {order.status === "preparing" && (
-                <div className="flex-shrink-0 mt-0.5">
+                <div className="shrink-0 mt-0.5">
                   <input
                     type="checkbox"
                     checked={checkedItems[item.id] || false}
@@ -195,7 +195,7 @@ const OrderCard = ({ order, onStartOrder, onReadyOrder, isUpdating }) => {
 
       {/* Progress indicator - chỉ hiện khi status là preparing */}
       {order.status === "preparing" && order.items?.length > 0 && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex-shrink-0">
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 shrink-0">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">
               Hoàn thành: {Object.values(checkedItems).filter(Boolean).length}/
@@ -223,7 +223,7 @@ const OrderCard = ({ order, onStartOrder, onReadyOrder, isUpdating }) => {
       )}
 
       {/* Actions - Always at bottom */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex gap-2 flex-shrink-0 mt-auto">
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex gap-2 shrink-0 mt-auto">
         <button
           onClick={() => onStartOrder(order.id)}
           disabled={

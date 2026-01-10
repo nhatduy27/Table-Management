@@ -1,41 +1,103 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import customerService from "../../services/customerService";
 
-const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
+const OrderStatusModal = ({
+  isOpen,
+  tableId,
+  onClose,
+  recentOrderIds,
+  socketRef,
+}) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && recentOrderIds && recentOrderIds.length > 0) {
-      fetchOrders();
-    }
-  }, [isOpen, tableId, recentOrderIds]);
+  const getStatusLabel = useCallback((status) => {
+    const statusMap = {
+      pending: "Chờ xác nhận",
+      confirmed: "Đã xác nhận",
+      preparing: "Đang chuẩn bị",
+      ready: "Sẵn sàng",
+      served: "Đã phục vụ",
+      payment: "Chờ thanh toán",
+      completed: "Hoàn thành",
+    };
+    return statusMap[status] || status;
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    if (!recentOrderIds || recentOrderIds.length === 0) return;
+
     setLoading(true);
     try {
-      // Call API to fetch order details
       const response = await customerService.getOrdersByIds(recentOrderIds);
       if (response.success) {
         setOrders(response.data || []);
       } else {
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: response.message || "Unable to load order status",
+          title: "Lỗi",
+          text: response.message || "Không thể tải trạng thái đơn hàng",
         });
       }
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Lỗi",
         text: error.message,
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [recentOrderIds]);
+
+  useEffect(() => {
+    if (isOpen && recentOrderIds && recentOrderIds.length > 0) {
+      fetchOrders();
+    }
+  }, [isOpen, recentOrderIds, fetchOrders]);
+
+  // Lắng nghe socket để cập nhật realtime
+  useEffect(() => {
+    const socket = socketRef?.current;
+    if (!socket || !tableId) return;
+
+    const handleOrderUpdate = (updatedOrder) => {
+      console.log("Socket received order update:", updatedOrder);
+
+      // Cập nhật order trong danh sách nếu nó thuộc recentOrderIds
+      setOrders((prevOrders) => {
+        return prevOrders.map((order) => {
+          if (order.id === updatedOrder.id) {
+            return updatedOrder;
+          }
+          return order;
+        });
+      });
+
+      // Hiển thị toast thông báo
+      Swal.fire({
+        icon: "info",
+        title: "Cập nhật đơn hàng",
+        text: `Đơn hàng #${updatedOrder.id?.slice(
+          0,
+          8
+        )} đã chuyển sang: ${getStatusLabel(updatedOrder.status)}`,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    };
+
+    const eventName = `order_update_table_${tableId}`;
+    socket.on(eventName, handleOrderUpdate);
+
+    return () => {
+      socket.off(eventName, handleOrderUpdate);
+    };
+  }, [socketRef, tableId, getStatusLabel]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -56,19 +118,6 @@ const OrderStatusModal = ({ isOpen, tableId, onClose, recentOrderIds }) => {
       default:
         return "bg-gray-100 text-gray-800";
     }
-  };
-
-  const getStatusLabel = (status) => {
-    const statusMap = {
-      pending: "Pending",
-      confirmed: "Confirmed",
-      preparing: "Preparing",
-      ready: "Ready",
-      served: "Served",
-      payment: "Payment",
-      completed: "Completed",
-    };
-    return statusMap[status] || status;
   };
 
   const formatDate = (dateString) => {

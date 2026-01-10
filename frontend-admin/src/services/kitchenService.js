@@ -17,8 +17,8 @@ const kitchenService = {
   // Cập nhật status của order
   updateOrderStatus: async (orderId, status) => {
     try {
-      const response = await adminApi.patch(
-        `/kitchen/orders/${orderId}/status`,
+      const response = await adminApi.put(
+        `/orders/${orderId}/status`,
         { status }
       );
       return response.data;
