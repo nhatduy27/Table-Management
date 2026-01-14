@@ -102,46 +102,45 @@ const WaiterDashboard = () => {
         return;
     }
 
-    try {
-      await axios.put(
-        `${API_URL}/admin/orders/${orderId}/status`, 
-        { status }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    // 🔥 OPTIMISTIC UI: Cập nhật giao diện NGAY LẬP TỨC (Sửa lỗi bấm xong không đổi màu)
+    setOrders(prev => prev.map(o => {
+        // Ép kiểu ID về String để so sánh chính xác
+        const currentId = String(o.id || o._id);
+        const targetId = String(orderId);
 
-      // ✅ FIX: Cập nhật UI ngay lập tức (Optimistic UI) - ĐỒNG BỘ VỚI BACKEND
-      setOrders(prev => prev.map(o => {
-          const currentId = o.id || o._id;
-          if (currentId === orderId) {
-             // Nếu duyệt đơn (confirmed), CHỈ update items có status='pending'
+        if (currentId === targetId) {
+             // CASE 1: DUYỆT ĐƠN (Confirmed)
              if (status === 'confirmed') {
                  const updatedItems = o.items.map(i => 
                      i.status === 'pending' ? {...i, status: 'confirmed'} : i
                  );
                  return { ...o, status: 'confirmed', items: updatedItems };
              }
+             // CASE 2: BƯNG MÓN (Served) - [MỚI THÊM]
+             else if (status === 'served') {
+                 // Tìm các món đang ready -> chuyển thành served ngay
+                 const updatedItems = o.items.map(i => 
+                     i.status === 'ready' ? {...i, status: 'served'} : i
+                 );
+                 return { ...o, items: updatedItems };
+             }
+             
              return { ...o, status: status };
-          }
-          return o;
-      }));
+        }
+        return o;
+    }));
 
+    try {
+      await axios.put(
+        `${API_URL}/admin/orders/${orderId}/status`, 
+        { status }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     } catch (err) {
       console.error(err);
       alert("Lỗi cập nhật: " + (err.response?.data?.message || err.message));
-    }
-  };
-
-  // Update trạng thái từng món (Ready -> Served)
-  const handleUpdateItemStatus = async (itemId, status) => {
-    const token = localStorage.getItem('token');
-    try {
-        // ✅ FIX: Dùng route kitchen (có logic auto-update Order)
-        await axios.put(`${API_URL}/admin/kitchen/items/${itemId}/status`, 
-            { status },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-    } catch (err) {
-        alert("Lỗi món: " + err.message);
+      // Nếu lỗi thì load lại trang để đồng bộ
+      window.location.reload();
     }
   };
 
@@ -219,8 +218,12 @@ const WaiterDashboard = () => {
             const orderId = order.id || order._id;
             
             const pendingItems = order.items?.filter(i => i.status === 'pending') || [];
+            // [MỚI] Lấy danh sách món Ready để hiện nút bưng
+            const readyItems = order.items?.filter(i => i.status === 'ready') || [];
             const activeItems = order.items?.filter(i => i.status !== 'pending') || [];
+            
             const hasNewRequest = pendingItems.length > 0;
+            const hasReadyToServe = readyItems.length > 0;
             const isPayment = order.status === 'payment';
 
             const borderClass = hasNewRequest 
@@ -296,9 +299,8 @@ const WaiterDashboard = () => {
                                         
                                         {/* Badge trạng thái */}
                                         <div className="flex gap-1 mt-1">
-                                            {/* [FIX] THÊM BADGE CONFIRMED */}
-                                            {item.status === 'confirmed' && <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-300 font-bold">Đã xác nhận (Chờ bếp)</span>}
-                                            
+                                            {/* [GIỮ NGUYÊN BADGE CŨ] */}
+                                            {item.status === 'confirmed' && <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-300 font-bold">Chờ bếp</span>}
                                             {item.status === 'preparing' && <span className="text-[9px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100">Bếp đang nấu</span>}
                                             {item.status === 'ready' && <span className="text-[9px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded border border-yellow-200 animate-pulse font-bold flex items-center gap-1"><Bell size={8}/> Đã xong</span>}
                                             {item.status === 'served' && <span className="text-[9px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100">Đã lên</span>}
@@ -311,17 +313,7 @@ const WaiterDashboard = () => {
                                         )}
                                      </div>
 
-                                     {/* NÚT BƯNG MÓN (CHỈ HIỆN KHI READY) */}
-                                     {item.status === 'ready' && (
-                                        <div className="flex gap-2 ml-2">
-                                            <button 
-                                                onClick={() => handleUpdateItemStatus(item.id || item._id, 'served')}
-                                                className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded shadow-sm flex items-center gap-1 transition-transform active:scale-95"
-                                            >
-                                                <CheckCircle size={14}/> Bưng món
-                                            </button>
-                                        </div>
-                                     )}
+                                     {/* [ĐÃ XÓA NÚT BƯNG MÓN LẺ Ở ĐÂY] */}
                                 </div>
                             ))}
                         </div>
@@ -340,12 +332,19 @@ const WaiterDashboard = () => {
                     {/* ACTIONS */}
                     {hasNewRequest ? (
                         <button 
-                            // [FIX] SỬA 'preparing' THÀNH 'confirmed'
                             onClick={() => handleUpdateStatus(orderId, 'confirmed')}
                             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg shadow-md transition-all active:scale-95 flex justify-center items-center gap-2"
                         >
                             <CheckCircle size={16}/> Duyệt {pendingItems.length} món mới
                         </button>
+                    ) : hasReadyToServe ? (
+                         /* [MỚI] Nút bưng tất cả món Ready - XUẤT HIỆN Ở ĐÂY */
+                         <button 
+                             onClick={() => handleUpdateStatus(orderId, 'served')}
+                             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg shadow-md transition-all active:scale-95 flex justify-center items-center gap-2 animate-pulse"
+                         >
+                             <CheckCircle size={16}/> Bưng {readyItems.length} món đã xong
+                         </button>
                     ) : (
                         <div className="w-full">
                              {/* Nút Thanh Toán: Chỉ hiện khi khách yêu cầu */}
