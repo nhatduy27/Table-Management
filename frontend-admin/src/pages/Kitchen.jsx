@@ -72,7 +72,7 @@ const Kitchen = () => {
             if (exists) return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
             // Chỉ thêm vào list nếu trạng thái là confirmed (đã duyệt) trở đi
             // Pending không thêm vào để tránh rác
-            if (['confirmed', 'preparing', 'ready'].includes(updatedOrder.status)) {
+            if (['confirmed', 'preparing', 'ready', 'served'].includes(updatedOrder.status)) {
                 return [updatedOrder, ...prev];
             }
             return prev;
@@ -141,7 +141,7 @@ const Kitchen = () => {
   const filteredOrders = orders
     .filter((o) => {
       // Bếp tuyệt đối không hiển thị đơn Hủy, Hoàn tất hoặc PENDING (chưa duyệt)
-      if (['completed', 'cancelled'].includes(o.status)) return false;
+      if (['completed', 'cancelled', 'pending', 'served'].includes(o.status)) return false;
 
       if (filter === "all") return true; 
       

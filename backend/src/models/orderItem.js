@@ -49,6 +49,10 @@ OrderItem.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    reject_reason: {
+      type: DataTypes.TEXT, // Lưu lý do từ chối (VD: "Hết hàng", "Khách đổi ý")
+      allowNull: true,
+    },
   },
   {
     sequelize,

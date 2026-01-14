@@ -176,6 +176,7 @@ export const updateOrderStatus = async (req, res) => {
         // CASE D: HỦY ĐƠN (Cancelled)
         // ------------------------------------------------------------------
         else if (status === 'cancelled') {
+            const { reason } = req.body;
             await OrderItem.update(
                 { status: 'cancelled' }, 
                 { where: { order_id: orderId } }
@@ -216,6 +217,51 @@ export const updateOrderStatus = async (req, res) => {
 
     } catch (error) {
         console.error('Update Order Error:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+};
+
+// PUT: /api/admin/orders/items/:itemId/reject
+export const rejectOrderItem = async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const { reason } = req.body; 
+
+        // 1. Tìm món ăn
+        const item = await OrderItem.findByPk(itemId);
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy món' });
+        }
+
+        // 2. Cập nhật trạng thái và Lý do vào cột riêng
+        item.status = 'cancelled';
+        item.reject_reason = reason; // ✅ Lưu vào cột mới
+        await item.save();
+
+        // 3. Lấy lại Order đầy đủ để bắn Socket
+        // (Cần include lại để FE cập nhật ngay lập tức)
+        const updatedOrder = await Order.findByPk(item.order_id, {
+            include: [
+                { 
+                    model: OrderItem, as: 'items',
+                    include: [{ model: MenuItem, as: 'menu_item' }, { model: OrderItemModifier, as: 'modifiers', include: ['modifier_option'] }]
+                },
+                { model: Table, as: 'table' }
+            ]
+        });
+
+        // 4. Bắn Socket cập nhật UI cho tất cả (Waiter & Kitchen)
+        if (req.io) {
+            req.io.emit('order_status_updated', updatedOrder);
+            if (updatedOrder.table_id) {
+                req.io.emit(`order_update_table_${updatedOrder.table_id}`, updatedOrder);
+            }
+        }
+
+        return res.json({ success: true, message: 'Đã từ chối món', data: updatedOrder });
+
+    } catch (error) {
+        console.error("Reject Item Error:", error);
         return res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };
