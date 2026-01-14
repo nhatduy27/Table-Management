@@ -167,7 +167,7 @@ const VerifyEmailPage = () => {
 							registeredEmail: email,
 							registeredUsername: username,
 							from: from,
-							message: "✅ Email đã được xác thực thành công!"
+							message: "Email đã được xác thực thành công!"
 						},
 						replace: true
 					});
