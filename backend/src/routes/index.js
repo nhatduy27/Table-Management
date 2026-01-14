@@ -9,6 +9,7 @@ import orderHistoryRoutes from './customer/orderHistory.routes.js';
 import orderItemRoutes from './customer/orderItem.routes.js';
 import paymentRoutes from './customer/payment.routes.js';
 import tableRoutes from './customer/table.routes.js';
+import reviewRoutes from './customer/review.routes.js';
 
 const router = express.Router();
 
@@ -22,16 +23,19 @@ router.use('/customer', customerAuth);
 // 3. Table routes (active order)
 router.use('/customer/tables', tableRoutes);
 
-// 4. Payment (PHẢI ĐẶT TRƯỚC orderHistoryRoutes để tránh conflict path)
+// 4. Reviews
+router.use('/customer/reviews', reviewRoutes);
+
+// 5. Payment (PHẢI ĐẶT TRƯỚC orderHistoryRoutes để tránh conflict path)
 router.use('/customer', paymentRoutes);
 
-// 5. Orders: Khớp với API GET /api/customer/orders
+// 6. Orders: Khớp với API GET /api/customer/orders
 router.use('/customer/orders', orderHistoryRoutes); 
 
-// 6. Order Items: Khớp với API POST /api/customer/order-items
+// 7. Order Items: Khớp với API POST /api/customer/order-items
 router.use('/customer/order-items', orderItemRoutes); 
 
-// 7. Khu vực Khách hàng khác
+// 8. Khu vực Khách hàng khác
 router.use('/', customerRoutes);
 
 export default router;

@@ -665,6 +665,76 @@ class CustomerService {
       );
     }
   }
+
+  // ========== REVIEW METHODS ==========
+  
+  // Tạo review cho món ăn
+  async createReview(reviewData) {
+    try {
+      const response = await publicApi.post('/customer/reviews', reviewData);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể tạo đánh giá"
+      );
+    }
+  }
+
+  // Lấy danh sách reviews của món ăn
+  async getMenuItemReviews(menuItemId, params = {}) {
+    try {
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await publicApi.get(
+        `/customer/reviews/menu-item/${menuItemId}?${queryParams}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể tải đánh giá"
+      );
+    }
+  }
+
+  // Kiểm tra món nào có thể review từ order
+  async getReviewableItems(orderId) {
+    try {
+      const response = await publicApi.get(
+        `/customer/reviews/order/${orderId}/can-review`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể kiểm tra đánh giá"
+      );
+    }
+  }
+
+  // Sửa review
+  async updateReview(reviewId, reviewData) {
+    try {
+      const response = await publicApi.put(
+        `/customer/reviews/${reviewId}`,
+        reviewData
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể cập nhật đánh giá"
+      );
+    }
+  }
+
+  // Xoá review
+  async deleteReview(reviewId) {
+    try {
+      const response = await publicApi.delete(`/customer/reviews/${reviewId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể xoá đánh giá"
+      );
+    }
+  }
 }
 
 export default new CustomerService();

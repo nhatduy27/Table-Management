@@ -13,6 +13,8 @@ import MenuItemModifierGroup from './menuItemModifierGroup.js';
 import Order from './order.js';      
 import OrderItem from './orderItem.js'; 
 import OrderItemModifier from "./orderItemModifier.js";
+import MenuItemReview from './menuItemReview.js';
+import Customer from './customer.js';
 
 // 2. Gom vào object db
 const db = {
@@ -27,7 +29,9 @@ const db = {
   MenuItemModifierGroup,
   Order,     
   OrderItem,
-  OrderItemModifier, 
+  OrderItemModifier,
+  MenuItemReview,
+  Customer,
 };
 
 // 3. CHẠY VÒNG LẶP LIÊN KẾT (Magic Loop)
