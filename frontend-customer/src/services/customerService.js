@@ -439,7 +439,24 @@ class CustomerService {
     }
   }
 
-  // 13. Lấy danh sách orders
+  // 13. Lấy chi tiết 1 order theo ID
+  async getOrderById(orderId) {
+    try {
+      if (!this.isLoggedIn()) {
+        throw new Error("Chưa đăng nhập");
+      }
+
+      const response = await customerApi.get(`/customer/orders/${orderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Get order by ID error:", error);
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể lấy thông tin đơn hàng"
+      );
+    }
+  }
+
+  // 14. Lấy danh sách orders
   async getOrders(queryParams = {}) {
     try {
       if (!this.isLoggedIn()) {
@@ -456,29 +473,7 @@ class CustomerService {
     }
   }
 
-  // [MỚI] Hàm lấy chi tiết đơn hàng (Dùng cho OrderTracking)
-  async getOrderById(orderId) {
-    try {
-      // Tận dụng hàm getOrderWithItems bạn đã viết sẵn
-      const result = await this.getOrderWithItems(orderId);
 
-      if (result.success) {
-        // Format lại dữ liệu để khớp với mong đợi của OrderTracking component
-        // Gộp 'order' và 'items' thành 1 object data duy nhất
-        return {
-          success: true,
-          data: {
-            ...result.order,      // Spread thông tin order (table_id, total_amount...)
-            items: result.items   // Gắn thêm mảng items vào
-          }
-        };
-      }
-      
-      return { success: false, message: result.message || "Không tìm thấy đơn hàng" };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  }
 
   // [MỚI] Hàm gọi thêm món vào đơn hàng đã có
   async addItemsToOrder(orderId, cartItems) {
@@ -533,23 +528,6 @@ class CustomerService {
     }
   }
 
-  // [MỚI] Hàm yêu cầu thanh toán
-  async requestPayment(orderId) {
-    try {
-      const token = this.getToken();
-      const apiExecutor = token ? customerApi : publicApi;
-
-      // Gọi API Backend (Bạn cần đảm bảo Backend có route này)
-      const response = await apiExecutor.post(`/customer/orders/${orderId}/request-payment`);
-      return response.data;
-    } catch (error) {
-      console.error("Request payment error:", error);
-      return {
-        success: false,
-        message: error.response?.data?.error || error.message || "Không thể gửi yêu cầu thanh toán"
-      };
-    }
-  }
 
   // ========== HELPER METHODS ==========
 

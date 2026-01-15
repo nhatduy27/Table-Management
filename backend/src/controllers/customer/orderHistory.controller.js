@@ -64,7 +64,6 @@ export const getMyOrders = async (req, res) => {
   try {
     const customerID = req.user?.uid || req.user?.id;
 
-    //Chỉ có thể xem lại lịch sử nếu như khách hàng đã đăng nhập
     if (!customerID) {
       return res.status(401).json({
         success: false,
@@ -72,7 +71,8 @@ export const getMyOrders = async (req, res) => {
       });
     }
 
-    const orders = await OrderService.getCustomerOrder(customerID, req.body);
+    // 🔥 SỬA: Dùng req.query thay vì req.body
+    const orders = await OrderService.getCustomerOrder(customerID, req.query);
 
     return res.status(200).json({
       success: true,
