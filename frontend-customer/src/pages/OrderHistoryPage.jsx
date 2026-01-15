@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import CustomerService from "../services/customerService";
-import TableService from "../services/tableService";
+// Không cần import TableService nữa vì backend trả về đủ rồi
 
 const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
-  const [tableNames, setTableNames] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Logic getFromPath có thể giữ lại nếu bạn vẫn dùng Link ở phần "Bạn chưa có đơn hàng nào"
   const getFromPath = () => {
     if (location.state?.from) return location.state.from;
     const searchParams = new URLSearchParams(location.search);
@@ -43,22 +41,9 @@ const OrderHistoryPage = () => {
       }
 
       const ordersResponse = await CustomerService.getOrders();
-      const fetchedOrders = ordersResponse.data || [];
-      setOrders(fetchedOrders);
-
-      const uniqueTableIds = [...new Set(fetchedOrders.map(o => o.table_id))].filter(Boolean);
-      const namesMap = {};
-      await Promise.all(
-        uniqueTableIds.map(async (id) => {
-          try {
-            const response = await TableService.getTableNumberById(id);
-            namesMap[id] = response.data?.table_number || "N/A";
-          } catch (err) {
-            namesMap[id] = "Lỗi";
-          }
-        })
-      );
-      setTableNames(namesMap);
+      // Backend đã include table, lấy dùng luôn, không cần gọi API khác
+      setOrders(ordersResponse.data || []);
+      
     } catch (err) {
       setError(err.message);
       if (err.message.includes("401")) {
@@ -68,6 +53,29 @@ const OrderHistoryPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // --- HELPER: BADGE TRẠNG THÁI ---
+  const getStatusBadge = (status) => {
+    const configs = {
+        completed: { label: 'Hoàn thành', class: 'bg-green-100 text-green-800 border-green-200' },
+        cancelled: { label: 'Đã hủy', class: 'bg-red-100 text-red-800 border-red-200' },
+        pending:   { label: 'Chờ xác nhận', class: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+        confirmed: { label: 'Đã xác nhận', class: 'bg-blue-100 text-blue-800 border-blue-200' },
+        preparing: { label: 'Đang nấu', class: 'bg-orange-100 text-orange-800 border-orange-200' },
+        ready:     { label: 'Sẵn sàng', class: 'bg-purple-100 text-purple-800 border-purple-200' },
+        served:    { label: 'Đang phục vụ', class: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+        payment:   { label: 'Thanh toán', class: 'bg-pink-100 text-pink-800 border-pink-200' },
+    };
+
+    const config = configs[status] || { label: status, class: 'bg-gray-100 text-gray-800 border-gray-200' };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config.class}`}>
+        <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-70"></span>
+        {config.label}
+      </span>
+    );
   };
 
   const formatDate = (dateString) => {
@@ -84,29 +92,19 @@ const OrderHistoryPage = () => {
     }).format(amount);
   };
 
-  const handleViewDetail = (orderId) => {
-    navigate(`/customer/orders/${orderId}`);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải lịch sử đơn hàng...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 font-sans">
       <div className="container mx-auto px-4 max-w-6xl">
         
-        {/* Header - ĐÃ XÓA NÚT QUAY LẠI */}
-        <div className="mb-8 text-center md:text-left">
-          <h1 className="text-3xl font-bold text-gray-900">Lịch sử đơn hàng</h1>
-          <p className="text-gray-500 mt-1">Xem lại những món ăn bạn đã gọi</p>
+        {/* Header */}
+        <div className="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Lịch sử đơn hàng</h1>
+            <p className="text-gray-500 mt-1">Xem lại những món ăn bạn đã gọi</p>
+          </div>
+          <Link to={fromPath} className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+             ← Quay lại Menu
+          </Link>
         </div>
 
         {/* Content */}
@@ -133,26 +131,33 @@ const OrderHistoryPage = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {orders.map((order) => (
                     <tr key={order.id} className="hover:bg-orange-50/40 transition-colors group">
+                      
+                      {/* Ngày đặt */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900 font-medium">{formatDate(order.ordered_at)}</span>
+                        <span className="text-sm text-gray-900 font-medium">{formatDate(order.created_at || order.ordered_at)}</span>
                       </td>
+
+                      {/* Vị trí Bàn (Đọc trực tiếp từ Order) */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">
-                          {tableNames[order.table_id] || "..."}
+                          {order.table ? `Bàn ${order.table.table_number}` : "Mang về"}
                         </span>
                       </td>
+
+                      {/* Tổng tiền */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-bold text-orange-600">{formatCurrency(order.total_amount)}</span>
                       </td>
+
+                      {/* Trạng thái */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                          Hoàn thành
-                        </span>
+                        {getStatusBadge(order.status)}
                       </td>
+
+                      {/* Nút thao tác */}
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
-                          onClick={() => handleViewDetail(order.id)}
+                          onClick={() => navigate(`/customer/orders/${order.id}`)}
                           className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-600 hover:text-white transition-all font-semibold active:scale-95 shadow-sm"
                         >
                           <span>Xem chi tiết</span>

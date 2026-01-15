@@ -72,7 +72,7 @@ export const getMyOrders = async (req, res) => {
       });
     }
 
-    const orders = await OrderService.getCustomerOrder(customerID, req.body);
+    const orders = await OrderService.getCustomerOrder(customerID, req.query);
 
     return res.status(200).json({
       success: true,

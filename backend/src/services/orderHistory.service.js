@@ -23,13 +23,16 @@ const OrderService = {
 
   async getCustomerOrder(customerId) {
     try {
-      console.log("OrderService: Getting orders for customer:", customerId);
-
       const orders = await Order.findAll({
-        where: {
-          customer_id: customerId, //Tìm kiếm order theo customer
-        },
-        order: [["ordered_at", "DESC"]], //sắp xếp thứ tự mới nhất
+        where: { customer_id: customerId },
+        // 👇 THÊM ĐOẠN NÀY ĐỂ FRONTEND KHÔNG PHẢI GỌI API LẺ TẺ
+        include: [
+          {
+            association: 'table', // Hoặc model: Table (tùy cách bạn setup relation)
+            attributes: ['id', 'table_number'] // Chỉ lấy số bàn cho nhẹ
+          }
+        ],
+        order: [["created_at", "DESC"]], // Nên dùng created_at hoặc ordered_at tùy DB
       });
 
       return orders;
@@ -39,32 +42,41 @@ const OrderService = {
     }
   },
 
+  // 3. Lấy chi tiết đơn (🔥 ĐÃ SỬA: Kèm Topping & Giá)
   async getOrderById(customerId, orderId) {
-    try {
-      const order = await Order.findOne({
-        where: {
-          customer_id: customerId, //Tìm kiếm order theo customer
-          id: orderId,
-        },
-        include: [
-          {
-            association: "items",
-            attributes: ["id", "quantity"],
-            include: [
-              {
-                association: "menu_item",
-                attributes: ["id", "name"],
-              },
-            ],
+      try {
+        const order = await Order.findOne({
+          where: {
+            customer_id: customerId,
+            id: orderId,
           },
-        ],
-      });
-      return order;
-    } catch (error) {
-      console.error("OrderService: Error getting orders:", error.message);
-      throw error;
-    }
-  },
-};
+          include: [
+            {
+              association: 'table',
+              attributes: ['id', 'table_number']
+            },
+            {
+              association: "items",
+              attributes: ["id", "quantity", "price_at_order", "notes", "status"], 
+              include: [
+                {
+                  association: "menu_item",
+                  attributes: ["id", "name", "price"],
+                },
+                {
+                  association: "modifiers",
+                  include: ["modifier_option"]
+                }
+              ],
+            },
+          ],
+        });
+        return order;
+      } catch (error) {
+        console.error("OrderService: Error getting order details:", error.message);
+        throw error;
+      }
+    },
+  };
 
 export default OrderService;

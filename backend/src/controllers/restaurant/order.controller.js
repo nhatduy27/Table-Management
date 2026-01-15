@@ -185,8 +185,14 @@ export const updateOrderStatus = async (req, res) => {
         }
         
         // CASE E: THANH TOÁN (Payment/Completed)
-        else if (status === 'payment' || status === 'completed') {
-            order.completed_at = new Date();
+        else if (status === 'payment') {
+            // Chỉ đổi trạng thái để hiện thông báo cho Waiter
+            // KHÔNG cập nhật completed_at
+            finalOrderStatus = status;
+        } 
+        // Trường hợp 2: Waiter xác nhận thu tiền HOẶC Cổng thanh toán báo thành công
+        else if (status === 'completed') {
+            order.completed_at = new Date(); // Lúc này mới chốt thời gian thực tế
             finalOrderStatus = status;
         }
 

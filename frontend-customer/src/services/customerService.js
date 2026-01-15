@@ -458,27 +458,22 @@ class CustomerService {
   // [MỚI] Hàm lấy chi tiết đơn hàng (Dùng cho OrderTracking)
   async getOrderById(orderId) {
     try {
-      // Tận dụng hàm getOrderWithItems bạn đã viết sẵn
-      const result = await this.getOrderWithItems(orderId);
-
-      if (result.success) {
-        // Format lại dữ liệu để khớp với mong đợi của OrderTracking component
-        // Gộp 'order' và 'items' thành 1 object data duy nhất
-        return {
-          success: true,
-          data: {
-            ...result.order, // Spread thông tin order (table_id, total_amount...)
-            items: result.items, // Gắn thêm mảng items vào
-          },
-        };
+      // 1. Kiểm tra đăng nhập (Bắt buộc)
+      if (!this.isLoggedIn()) {
+        throw new Error("Chưa đăng nhập");
       }
 
-      return {
-        success: false,
-        message: result.message || "Không tìm thấy đơn hàng",
-      };
+      // 2. Gọi API lấy chi tiết (có token)
+      // Backend trả về: { success: true, data: { ...order, table: {}, items: [] } }
+      const response = await customerApi.get(`/customer/orders/${orderId}`);
+      
+      // Trả về body response
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.message };
+      console.error("Get order by ID error:", error);
+      throw new Error(
+        error.response?.data?.error || error.message || "Không thể lấy thông tin đơn hàng"
+      );
     }
   }
 
