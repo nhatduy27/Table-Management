@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Star, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
+import ReviewList from '../review/ReviewList';
 
 const MenuItemDetailModal = ({ item, onClose, onAddToOrder }) => {
   const [activeTab, setActiveTab] = useState('details'); // 'details' or 'reviews'
@@ -95,7 +96,7 @@ const MenuItemDetailModal = ({ item, onClose, onAddToOrder }) => {
                 onClick={() => setActiveTab('reviews')}
                 className={`pb-2 text-sm font-bold transition-colors relative ${activeTab === 'reviews' ? 'text-orange-600' : 'text-gray-400 hover:text-gray-600'}`}
               >
-                Đánh giá (0)
+                Đánh giá ({item.total_reviews || 0})
                 {activeTab === 'reviews' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 rounded-t-full" />}
               </button>
             </div>
@@ -125,13 +126,9 @@ const MenuItemDetailModal = ({ item, onClose, onAddToOrder }) => {
                 </div>
               </div>
             ) : (
-              // --- REVIEW SECTION (Placeholder) ---
-              <div className="text-center py-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm inline-block mb-4">
-                   <Star size={40} className="text-gray-300 mx-auto mb-2" />
-                   <p className="text-gray-500 font-medium">Chưa có đánh giá nào</p>
-                   <p className="text-xs text-gray-400 mt-1">Tính năng đang được phát triển</p>
-                </div>
+              // --- REVIEW SECTION (Live Reviews) ---
+              <div>
+                <ReviewList menuItemId={item.id} showTitle={false} />
               </div>
             )}
           </div>

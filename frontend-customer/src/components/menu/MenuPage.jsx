@@ -134,7 +134,13 @@ const MenuPage = () => {
                     confirmButtonColor: '#ea580c'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        navigate(`/customer/review/${updatedOrder.id}`); 
+                        // Navigate đến Order History với state để tự động mở review
+                        navigate('/customer/orders', { 
+                            state: { 
+                                autoOpenReview: true, 
+                                orderId: updatedOrder.id 
+                            } 
+                        });
                     }
                     setActiveOrder(null); // Reset trạng thái bàn trống
                 });

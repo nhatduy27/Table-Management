@@ -12,6 +12,15 @@ export const createReview = async (req, res) => {
     const { menu_item_id, rating, comment, order_id, customer_name } = req.body;
     const customer_id = req.customer?.uid || null;
 
+    console.log('📝 CREATE REVIEW REQUEST:', {
+      menu_item_id,
+      rating,
+      comment,
+      order_id,
+      customer_name,
+      customer_id
+    });
+
     // Validation
     if (!menu_item_id || !rating) {
       return res.status(400).json({
@@ -77,6 +86,8 @@ export const createReview = async (req, res) => {
       is_verified_purchase,
       is_approved: true // Auto-approve for now, can add moderation later
     });
+
+    console.log('✅ REVIEW CREATED SUCCESSFULLY:', review.toJSON());
 
     res.status(201).json({
       success: true,
