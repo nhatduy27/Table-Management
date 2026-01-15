@@ -17,6 +17,7 @@ import HomeRedirect from "./components/common/HomeRedirect";
 import EmployeeManagement from "./pages/admin/EmployeeManagement";
 import Kitchen from "./pages/Kitchen";
 import WaiterPage from "./pages/waiter/WaiterPage";
+import ReportPage from "./pages/admin/ReportPage";
 
 import {
   CategoryList,
@@ -83,6 +84,7 @@ function App() {
             <Route path="/" element={<HomeRedirect />} />
 
             {/* Admin Routes */}
+            <Route path="/admin/reports" element={<ReportPage />} />
             <Route path="/tables" element={<TableList />} />
             <Route path="/tables/new" element={<TableForm />} />
             <Route path="/tables/:id" element={<TableForm />} />
