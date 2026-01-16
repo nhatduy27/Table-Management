@@ -725,7 +725,10 @@ class CustomerService {
   // Tạo review cho món ăn
   async createReview(reviewData) {
     try {
-      const response = await publicApi.post("/customer/reviews", reviewData);
+      // Dùng customerApi nếu đã login, publicApi nếu khách vãng lai
+      const token = this.getToken();
+      const apiExecutor = token ? customerApi : publicApi;
+      const response = await apiExecutor.post("/customer/reviews", reviewData);
       return response.data;
     } catch (error) {
       throw new Error(
