@@ -39,6 +39,10 @@ User.init(
         isIn: [['super_admin', 'admin', 'waiter', 'kitchen', 'customer']],
       }
     },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true, // Mặc định là True (Đang hoạt động)
+    }
   },
   {
     sequelize, // Truyền instance kết nối vào đây
