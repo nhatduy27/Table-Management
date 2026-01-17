@@ -67,7 +67,7 @@ const MenuPage = () => {
     updateQuantity,
     clearCart,
     getTotalItems,
-  } = useCart();
+  } = useCart(tableId);
 
   // --- 2. HELPER ---
   const showToast = (icon, title) => {
