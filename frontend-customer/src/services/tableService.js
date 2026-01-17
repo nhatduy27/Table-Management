@@ -83,10 +83,35 @@ const tableService = {
   },
 
   // Verify QR code token (public endpoint)
-  verifyQRToken: async (tableId, token) => {
-    const response = await publicApi.get("/menu", {
-      params: { table: tableId, token },
-    });
+  verifyQRToken: async (tableId, token, filters = {}) => {
+    const params = { table: tableId, token };
+
+    // Thêm các filter params nếu có
+    if (filters.q) params.q = filters.q;
+    if (filters.categoryId) params.categoryId = filters.categoryId;
+    if (filters.chefRecommended)
+      params.chefRecommended = filters.chefRecommended;
+    if (filters.sort) params.sort = filters.sort;
+    if (filters.page) params.page = filters.page;
+    if (filters.limit) params.limit = filters.limit;
+
+    const response = await publicApi.get("/menu", { params });
+    return response.data;
+  },
+
+  // Lấy menu với filters (sử dụng token đã lưu)
+  getMenuWithFilters: async (tableId, token, filters = {}) => {
+    const params = { table: tableId, token };
+
+    if (filters.q) params.q = filters.q;
+    if (filters.categoryId) params.categoryId = filters.categoryId;
+    if (filters.chefRecommended)
+      params.chefRecommended = filters.chefRecommended;
+    if (filters.sort) params.sort = filters.sort;
+    if (filters.page) params.page = filters.page;
+    if (filters.limit) params.limit = filters.limit;
+
+    const response = await publicApi.get("/menu", { params });
     return response.data;
   },
 
@@ -100,7 +125,7 @@ const tableService = {
 
     if (filters.location && filters.location !== "all") {
       filtered = filtered.filter(
-        (table) => table.location === filters.location
+        (table) => table.location === filters.location,
       );
     }
 
@@ -112,7 +137,7 @@ const tableService = {
           (table.location &&
             table.location.toLowerCase().includes(searchLower)) ||
           (table.description &&
-            table.description.toLowerCase().includes(searchLower))
+            table.description.toLowerCase().includes(searchLower)),
       );
     }
 

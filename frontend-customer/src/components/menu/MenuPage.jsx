@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { io } from "socket.io-client";
 
 import Loading from "../common/Loading";
 import Alert from "../common/Alert";
+import Pagination from "../common/Pagination";
 import tableService from "../../services/tableService";
 import CustomerService from "../../services/customerService";
 import MenuHeader from "./MenuHeader";
@@ -14,6 +15,7 @@ import MenuItemCard from "./MenuItemCard";
 import CartSidebar from "./CartSidebar";
 import CartButton from "./CartButton";
 import ModifierModal from "./ModifierModal";
+import MenuFilterBar from "./MenuFilterBar";
 import useCart from "./hooks/useCart";
 
 import OrderDetailModal from "./OrderDetailModal";
@@ -51,6 +53,24 @@ const MenuPage = () => {
   const [selectedItem, setSelectedItem] = useState(null); // Cho Modifier Modal
   const [orderPlacing, setOrderPlacing] = useState(false);
 
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [chefRecommended, setChefRecommended] = useState(false);
+  const [sortBy, setSortBy] = useState("");
+  const [allItems, setAllItems] = useState([]); // Lưu trữ tất cả items từ API
+  const hadFilterRef = useRef(false); // Track if filter was applied (using ref to avoid re-render loops)
+
+  // Pagination states
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 12,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+  const ITEMS_PER_PAGE = 12;
+
   // Active Order (Để check xem bàn này đang ăn gì)
   const [activeOrder, setActiveOrder] = useState(null);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
@@ -87,7 +107,7 @@ const MenuPage = () => {
     try {
       const response = await CustomerService.requestPayment(
         orderId,
-        paymentMethod
+        paymentMethod,
       );
 
       if (response.success) {
@@ -157,7 +177,7 @@ const MenuPage = () => {
         };
         showToast(
           "info",
-          `Đơn hàng: ${statusMap[updatedOrder.status] || updatedOrder.status}`
+          `Đơn hàng: ${statusMap[updatedOrder.status] || updatedOrder.status}`,
         );
       }
     });
@@ -176,8 +196,11 @@ const MenuPage = () => {
         return;
       }
       try {
-        // 1. Verify Table Token
-        const response = await tableService.verifyQRToken(tableId, token);
+        // 1. Verify Table Token (với pagination mặc định)
+        const response = await tableService.verifyQRToken(tableId, token, {
+          page: 1,
+          limit: ITEMS_PER_PAGE,
+        });
         if (response.success) {
           setTableInfo(response.data);
 
@@ -187,9 +210,8 @@ const MenuPage = () => {
 
           // 2. Check xem bàn này có đơn chưa (Active Order)
           try {
-            const activeOrderRes = await CustomerService.getActiveOrder(
-              tableId
-            );
+            const activeOrderRes =
+              await CustomerService.getActiveOrder(tableId);
             if (activeOrderRes.success && activeOrderRes.data) {
               setActiveOrder(activeOrderRes.data);
             }
@@ -217,6 +239,22 @@ const MenuPage = () => {
     try {
       const rawCategories = tableInfo.categories || [];
       const items = tableInfo.items || [];
+      const paginationData = tableInfo.pagination || {};
+
+      // Lưu tất cả items để filter
+      setAllItems(items);
+
+      // Cập nhật pagination từ response ban đầu
+      if (paginationData.totalPages) {
+        setPagination({
+          currentPage: paginationData.currentPage || 1,
+          totalPages: paginationData.totalPages || 1,
+          totalItems: paginationData.totalItems || items.length,
+          limit: paginationData.limit || ITEMS_PER_PAGE,
+          hasNextPage: paginationData.hasNextPage || false,
+          hasPrevPage: paginationData.hasPrevPage || false,
+        });
+      }
 
       // Gom nhóm món ăn theo Category ID
       const itemsByCategory = items.reduce((acc, item) => {
@@ -235,19 +273,186 @@ const MenuPage = () => {
       }));
 
       setCategories(categoriesWithItems);
-      // Mặc định chọn tab đầu tiên có món
-      const firstValidCat = categoriesWithItems.find((c) => c.items.length > 0);
-      if (firstValidCat) {
-        setActiveCategory(firstValidCat.id);
-      } else if (categoriesWithItems.length > 0) {
-        setActiveCategory(categoriesWithItems[0].id);
-      }
+      // Mặc định chọn tab "Tất cả"
+      setActiveCategory("all");
     } catch (err) {
       setMenuError("Không thể hiển thị thực đơn.");
     } finally {
       setMenuLoading(false);
     }
   }, [tableInfo]);
+
+  // D. Fetch menu với filters khi filter thay đổi
+  const fetchMenuWithFilters = useCallback(
+    async (page = 1) => {
+      if (!tableId || !token) return;
+
+      setMenuLoading(true);
+      try {
+        const filters = {
+          page,
+          limit: ITEMS_PER_PAGE,
+        };
+        if (searchQuery) filters.q = searchQuery;
+        if (chefRecommended) filters.chefRecommended = "true";
+        if (sortBy) filters.sort = sortBy;
+
+        const response = await tableService.getMenuWithFilters(
+          tableId,
+          token,
+          filters,
+        );
+
+        if (response.success && response.data) {
+          const rawCategories = response.data.categories || [];
+          const items = response.data.items || [];
+          const paginationData = response.data.pagination || {};
+
+          setAllItems(items);
+
+          // Cập nhật pagination
+          setPagination({
+            currentPage: paginationData.currentPage || page,
+            totalPages: paginationData.totalPages || 1,
+            totalItems: paginationData.totalItems || items.length,
+            limit: paginationData.limit || ITEMS_PER_PAGE,
+            hasNextPage: paginationData.hasNextPage || false,
+            hasPrevPage: paginationData.hasPrevPage || false,
+          });
+
+          // Gom nhóm món ăn theo Category ID
+          const itemsByCategory = items.reduce((acc, item) => {
+            const catId = item.category?.id;
+            if (catId) {
+              if (!acc[catId]) acc[catId] = [];
+              acc[catId].push(item);
+            }
+            return acc;
+          }, {});
+
+          // Map lại cấu trúc Category
+          const categoriesWithItems = rawCategories.map((cat) => ({
+            ...cat,
+            items: itemsByCategory[cat.id] || [],
+          }));
+
+          setCategories(categoriesWithItems);
+        }
+      } catch (err) {
+        console.error("Error fetching menu with filters:", err);
+      } finally {
+        setMenuLoading(false);
+      }
+    },
+    [tableId, token, searchQuery, chefRecommended, sortBy, ITEMS_PER_PAGE],
+  );
+
+  // Hàm reload menu gốc (phải định nghĩa trước useEffect sử dụng nó)
+  const reloadOriginalMenu = useCallback(
+    async (page = 1) => {
+      if (!tableId || !token) return;
+
+      setMenuLoading(true);
+      try {
+        const response = await tableService.verifyQRToken(tableId, token, {
+          page,
+          limit: ITEMS_PER_PAGE,
+        });
+        if (response.success && response.data) {
+          const rawCategories = response.data.categories || [];
+          const items = response.data.items || [];
+          const paginationData = response.data.pagination || {};
+
+          setAllItems(items);
+
+          // Cập nhật pagination
+          setPagination({
+            currentPage: paginationData.currentPage || page,
+            totalPages: paginationData.totalPages || 1,
+            totalItems: paginationData.totalItems || items.length,
+            limit: paginationData.limit || ITEMS_PER_PAGE,
+            hasNextPage: paginationData.hasNextPage || false,
+            hasPrevPage: paginationData.hasPrevPage || false,
+          });
+
+          const itemsByCategory = items.reduce((acc, item) => {
+            const catId = item.category?.id;
+            if (catId) {
+              if (!acc[catId]) acc[catId] = [];
+              acc[catId].push(item);
+            }
+            return acc;
+          }, {});
+
+          const categoriesWithItems = rawCategories.map((cat) => ({
+            ...cat,
+            items: itemsByCategory[cat.id] || [],
+          }));
+
+          setCategories(categoriesWithItems);
+        }
+      } catch (err) {
+        console.error("Error reloading menu:", err);
+      } finally {
+        setMenuLoading(false);
+      }
+    },
+    [tableId, token, ITEMS_PER_PAGE],
+  );
+
+  // Handler chuyển trang
+  const handlePageChange = useCallback(
+    (newPage) => {
+      const hasActiveFilter = searchQuery || chefRecommended || sortBy;
+      if (hasActiveFilter) {
+        fetchMenuWithFilters(newPage);
+      } else {
+        reloadOriginalMenu(newPage);
+      }
+      // Scroll lên đầu danh sách món
+      window.scrollTo({ top: 300, behavior: "smooth" });
+    },
+    [
+      searchQuery,
+      chefRecommended,
+      sortBy,
+      fetchMenuWithFilters,
+      reloadOriginalMenu,
+    ],
+  );
+
+  // Effect để gọi API khi filters thay đổi
+  useEffect(() => {
+    // Chỉ fetch khi đã có tableInfo (đã verify xong)
+    if (!tableInfo) return;
+
+    const hasActiveFilter = searchQuery || chefRecommended || sortBy;
+
+    if (hasActiveFilter) {
+      // Có filter -> gọi API với filter
+      hadFilterRef.current = true;
+      fetchMenuWithFilters();
+    } else if (hadFilterRef.current) {
+      // Không còn filter nhưng trước đó đã filter -> reload menu gốc
+      hadFilterRef.current = false;
+      reloadOriginalMenu();
+    }
+  }, [
+    searchQuery,
+    chefRecommended,
+    sortBy,
+    tableInfo,
+    fetchMenuWithFilters,
+    reloadOriginalMenu,
+  ]);
+
+  // Handler reset filters
+  const handleResetFilters = useCallback(() => {
+    setSearchQuery("");
+    setChefRecommended(false);
+    setSortBy("");
+    // reloadOriginalMenu sẽ được gọi tự động bởi useEffect khi hadFilterRef.current = true và filters = empty
+  }, []);
 
   // --- 4. HANDLERS (Sự kiện người dùng) ---
 
@@ -264,7 +469,7 @@ const MenuPage = () => {
     modifiers,
     quantity,
     modifiersTotalPrice,
-    note
+    note,
   ) => {
     addToCart(item, modifiers, quantity, modifiersTotalPrice, note);
     setSelectedItem(null);
@@ -324,7 +529,7 @@ const MenuPage = () => {
         try {
           orderResponse = await CustomerService.addItemsToOrder(
             activeOrder.id,
-            cartItems
+            cartItems,
           );
         } catch (err) {
           // ✅ NẾU ORDER CŨ KHÔNG TỒN TẠI/ĐÃ ĐÓNG -> TẠO ĐƠN MỚI
@@ -333,7 +538,7 @@ const MenuPage = () => {
             setActiveOrder(null); // Clear order cũ
             orderResponse = await CustomerService.createOrderWithItems(
               targetTableId,
-              cartItems
+              cartItems,
             );
           } else {
             throw err; // Throw lại lỗi khác
@@ -343,7 +548,7 @@ const MenuPage = () => {
         // Nếu chưa có -> Gọi API tạo đơn mới
         orderResponse = await CustomerService.createOrderWithItems(
           targetTableId,
-          cartItems
+          cartItems,
         );
       }
 
@@ -412,9 +617,13 @@ const MenuPage = () => {
       </div>
     );
 
-  const activeCategoryData = categories.find(
-    (cat) => cat.id === activeCategory
-  );
+  // Lấy tất cả items từ tất cả categories
+  const allMenuItems = categories.flatMap((cat) => cat.items || []);
+
+  const activeCategoryData =
+    activeCategory === "all"
+      ? { id: "all", name: "Tất cả món", items: allMenuItems }
+      : categories.find((cat) => cat.id === activeCategory);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -426,11 +635,23 @@ const MenuPage = () => {
       <main className="container mx-auto px-4 py-6">
         {menuError && <Alert type="warning" message={menuError} />}
 
+        {/* Filter Bar */}
+        <MenuFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          chefRecommended={chefRecommended}
+          onChefRecommendedChange={setChefRecommended}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          onResetFilters={handleResetFilters}
+        />
+
         {/* Danh sách Categories */}
         <CategoryTabs
           categories={categories}
           activeCategory={activeCategory}
           onSelectCategory={setActiveCategory}
+          totalItems={allMenuItems.length}
         />
 
         {/* Danh sách Món ăn */}
@@ -457,6 +678,17 @@ const MenuPage = () => {
                 Chưa có món ăn trong danh mục này.
               </div>
             )}
+
+            {/* Pagination - luôn hiển thị nếu có nhiều trang */}
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              limit={pagination.limit}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
 
