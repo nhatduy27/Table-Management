@@ -273,7 +273,7 @@ export const momoPayment = async (req, res) => {
     var partnerCode = "MOMO";
 
     // Redirect về frontend sau khi thanh toán
-    var redirectUrl = `${process.env.FRONTEND_URL}/payment-result?orderId=${customerOrderId}`;
+    var redirectUrl = `${process.env.FRONTEND_URL}/customer/orders/${customerOrderId}`;
     // IPN URL để MoMo gọi callback (cần ngrok hoặc domain public cho production)
     var ipnUrl =
       process.env.MOMO_IPN_URL ||

@@ -28,12 +28,15 @@ export const createReview = async (req, res) => {
     }
 
     // A. Kiểm tra Order có tồn tại và thuộc về Customer này không?
-    const order = await Order.findOne({
-        where: {
-            id: order_id,
-            customer_id: customer_id // Chốt chặn bảo mật
-        }
-    });
+    const whereClause = { id: order_id };
+    
+    // Nếu có customer_id (đã login) -> Kiểm tra ownership
+    // Nếu không có (khách vãng lai) -> Chỉ cần order tồn tại
+    if (customer_id) {
+        whereClause.customer_id = customer_id;
+    }
+    
+    const order = await Order.findOne({ where: whereClause });
 
     if (!order) {
         return res.status(403).json({ success: false, error: 'Invalid order or you do not own this order' });
