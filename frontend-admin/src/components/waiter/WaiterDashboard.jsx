@@ -457,7 +457,7 @@ const WaiterDashboard = () => {
                               </span>
                               {item.status === "cancelled" && (
                                 <span className="text-[9px] text-red-500">
-                                  {item.reject_reason}t
+                                  {item.reject_reason}
                                 </span>
                               )}
                             </div>
@@ -502,17 +502,42 @@ const WaiterDashboard = () => {
                     <DollarSign size={16} /> Lập Hóa Đơn
                   </button>
                 ) : isPaymentPending ? (
-                  // NÚT THU TIỀN MẶT (Cho bước 2)
+                  // NÚT THANH TOÁN - Hiển thị theo payment_method
                   <div className="space-y-2">
-                    <div className="text-center text-xs text-orange-600 font-bold bg-orange-100 p-1 rounded">
-                      Đang chờ khách trả tiền...
-                    </div>
-                    <button
-                      onClick={() => handleConfirmCashPayment(orderId)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow-md transition-all active:scale-95 flex justify-center items-center gap-2"
-                    >
-                      <CreditCard size={16} /> Khách trả Tiền Mặt
-                    </button>
+                    {!order.payment_method ? (
+                      // Chưa chọn phương thức
+                      <div className="text-center text-xs text-purple-600 font-bold bg-purple-100 p-2 rounded animate-pulse">
+                        Đang chờ khách chọn phương thức thanh toán...
+                      </div>
+                    ) : order.payment_method === "cash" ? (
+                      // Khách chọn tiền mặt
+                      <>
+                        <div className="text-center text-xs text-green-600 font-bold bg-green-100 p-1 rounded">
+                          Khách chọn: Tiền mặt 💵
+                        </div>
+                        <button
+                          onClick={() => handleConfirmCashPayment(orderId)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg shadow-md transition-all active:scale-95 flex justify-center items-center gap-2"
+                        >
+                          <CreditCard size={16} /> Thu tiền mặt
+                        </button>
+                      </>
+                    ) : order.payment_method === "momo" ? (
+                      // Khách chọn MoMo
+                      <div className="text-center text-xs text-pink-600 font-bold bg-pink-100 p-2 rounded">
+                        Đang chờ khách thanh toán MoMo 🟣
+                      </div>
+                    ) : order.payment_method === "vnpay" ? (
+                      // Khách chọn VNPay
+                      <div className="text-center text-xs text-blue-600 font-bold bg-blue-100 p-2 rounded">
+                        Đang chờ khách thanh toán VNPay 🔵
+                      </div>
+                    ) : (
+                      // Phương thức khác
+                      <div className="text-center text-xs text-gray-600 font-bold bg-gray-100 p-2 rounded">
+                        Đang chờ thanh toán ({order.payment_method})...
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <span className="text-center block text-xs text-gray-400">

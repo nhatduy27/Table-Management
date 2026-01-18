@@ -6,6 +6,9 @@ const router = express.Router();
 // Yêu cầu thanh toán (Customer bấm "Request Bill")
 router.post('/orders/:orderId/request-payment', paymentController.requestPayment);
 
+// Chọn phương thức thanh toán (Customer chọn Cash/MoMo/VNPay)
+router.post('/orders/:orderId/select-payment-method', paymentController.selectPaymentMethod);
+
 // Hoàn tất thanh toán (Sau khi payment gateway xác nhận)
 router.post('/orders/:orderId/complete-payment', paymentController.completePayment);
 

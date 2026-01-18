@@ -124,8 +124,8 @@ const BillModal = ({ isOpen, onClose, order, onRequestPayment }) => {
         Swal.fire("Chưa thể thanh toán", "Vui lòng đợi món lên đủ!", "warning");
         return;
       }
-      // Gọi hàm từ props (MenuPage sẽ gọi API requestPayment)
-      onRequestPayment(order.id, "cash");
+      // Gọi hàm từ props (MenuPage sẽ gọi API requestPayment - KHÔNG CẦN payment_method)
+      onRequestPayment(order.id);
       return;
     }
 
@@ -134,32 +134,40 @@ const BillModal = ({ isOpen, onClose, order, onRequestPayment }) => {
 
     // C. Nếu đã chốt bill (Ready To Pay) -> Xử lý thanh toán (Step 3)
     if (isReadyToPay) {
-      if (selectedPaymentMethod === "cash") {
-        // Tiền mặt: Chỉ hiện thông báo, Waiter sẽ bấm "Thu tiền" trên máy họ
-        Swal.fire({
-          icon: "info",
-          title: "Thanh toán Tiền mặt",
-          text: "Vui lòng chuẩn bị tiền mặt. Nhân viên sẽ đến thu tại bàn.",
-          confirmButtonColor: "#16a34a",
-        });
-        onClose();
-      } else if (selectedPaymentMethod === "momo") {
-        // MoMo: Gọi API lấy link
-        setIsProcessing(true);
-        try {
+      setIsProcessing(true);
+      try {
+        // 1. Gọi API lưu phương thức thanh toán vào DB
+        await CustomerService.selectPaymentMethod(order.id, selectedPaymentMethod);
+        
+        // 2. Xử lý theo từng phương thức
+        if (selectedPaymentMethod === "cash") {
+          // Tiền mặt: Hiện thông báo, waiter sẽ thu tiền
+          Swal.fire({
+            icon: "info",
+            title: "Thanh toán Tiền mặt",
+            text: "Vui lòng chuẩn bị tiền mặt. Nhân viên sẽ đến thu tại bàn.",
+            confirmButtonColor: "#16a34a",
+          });
+          onClose();
+        } else if (selectedPaymentMethod === "momo") {
+          // MoMo: Tạo payment link và redirect
           const res = await CustomerService.createMomoPayment(order.id);
           if (res && res.payUrl) {
             window.location.href = res.payUrl;
           } else {
             throw new Error("Không lấy được link thanh toán");
           }
-        } catch (err) {
-          Swal.fire("Lỗi", "Kết nối MoMo thất bại: " + err.message, "error");
-          setIsProcessing(false);
+        } else if (selectedPaymentMethod === "vnpay") {
+          // VNPay: Tương tự MoMo
+          Swal.fire("Thông báo", "Cổng thanh toán VNPay đang bảo trì.", "info");
+        } else {
+          // Các cổng khác
+          Swal.fire("Thông báo", "Cổng thanh toán này đang bảo trì.", "info");
         }
-      } else {
-        // Các cổng khác (Mock)
-        Swal.fire("Thông báo", "Cổng thanh toán này đang bảo trì.", "info");
+      } catch (err) {
+        Swal.fire("Lỗi", err.message || "Không thể xử lý thanh toán", "error");
+      } finally {
+        setIsProcessing(false);
       }
     }
   };

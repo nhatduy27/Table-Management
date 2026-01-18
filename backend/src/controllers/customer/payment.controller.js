@@ -4,14 +4,13 @@ import axios from "axios";
 import crypto from "crypto";
 
 /**
- * [CUSTOMER] Yêu cầu thanh toán
+ * [CUSTOMER] Yêu cầu thanh toán (Bước 1: Chỉ gọi bill, chưa chọn phương thức)
  * POST /api/customer/orders/:orderId/request-payment
- * Body: { payment_method: 'cash' | 'momo' | 'vnpay' | 'zalopay' | 'stripe' }
+ * Body: RỖNG (không cần payment_method)
  */
 export const requestPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { payment_method = "cash" } = req.body;
 
     // 1. Lấy thông tin order
     const order = await Order.findByPk(orderId, {
@@ -71,9 +70,8 @@ export const requestPayment = async (req, res) => {
       });
     }
 
-    // 4. Cập nhật trạng thái đơn sang 'payment'
+    // 4. Cập nhật trạng thái đơn sang 'payment_request' (KHÔNG lưu payment_method)
     order.status = "payment_request";
-    // order.payment_method = payment_method;
     await order.save();
 
     // 5. Reload để lấy data đầy đủ
@@ -99,7 +97,7 @@ export const requestPayment = async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Đã yêu cầu thanh toán bằng ${payment_method}`,
+      message: "Đã gửi yêu cầu thanh toán. Vui lòng đợi nhân viên xác nhận.",
       data: order,
     });
   } catch (error) {
@@ -107,6 +105,92 @@ export const requestPayment = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Lỗi máy chủ khi yêu cầu thanh toán",
+    });
+  }
+};
+
+/**
+ * [CUSTOMER] Chọn phương thức thanh toán (Bước 3: Sau khi waiter chốt bill)
+ * POST /api/customer/orders/:orderId/select-payment-method
+ * Body: { payment_method: 'cash' | 'momo' | 'vnpay' }
+ */
+export const selectPaymentMethod = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { payment_method } = req.body;
+
+    if (!payment_method) {
+      return res.status(400).json({
+        success: false,
+        error: "Vui lòng chọn phương thức thanh toán",
+      });
+    }
+
+    // 1. Lấy thông tin order
+    const order = await Order.findByPk(orderId, {
+      include: [
+        {
+          association: "items",
+          include: [
+            "menu_item",
+            { association: "modifiers", include: ["modifier_option"] },
+          ],
+        },
+        { association: "table" },
+      ],
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: "Không tìm thấy đơn hàng",
+      });
+    }
+
+    // 2. Kiểm tra trạng thái phải là payment_pending
+    if (order.status !== "payment_pending") {
+      return res.status(400).json({
+        success: false,
+        error: "Đơn hàng chưa sẵn sàng thanh toán. Vui lòng đợi nhân viên chốt hóa đơn.",
+      });
+    }
+
+    // 3. Lưu phương thức thanh toán
+    order.payment_method = payment_method;
+    await order.save();
+
+    // 4. Reload để lấy data đầy đủ
+    await order.reload({
+      include: [
+        {
+          association: "items",
+          include: [
+            "menu_item",
+            { association: "modifiers", include: ["modifier_option"] },
+          ],
+        },
+        { association: "table" },
+      ],
+    });
+
+    // 5. Emit socket để waiter biết khách đã chọn phương thức
+    if (req.io) {
+      req.io.emit("order_status_updated", order);
+      if (order.table_id) {
+        req.io.emit(`order_update_table_${order.table_id}`, order);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Đã chọn phương thức: ${payment_method}`,
+      data: order,
+    });
+  } catch (error) {
+    console.error("Select payment method error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi máy chủ khi chọn phương thức thanh toán",
     });
   }
 };

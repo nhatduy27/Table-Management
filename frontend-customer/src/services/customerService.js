@@ -671,11 +671,27 @@ class CustomerService {
     }
   }
 
-  // // Yêu cầu thanh toán
-  async requestPayment(orderId, paymentMethod = "cash") {
+  // Yêu cầu thanh toán (Bước 1: Gọi bill, chưa chọn phương thức)
+  async requestPayment(orderId) {
     try {
       const response = await publicApi.post(
-        `/customer/orders/${orderId}/request-payment`,
+        `/customer/orders/${orderId}/request-payment`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.error ||
+          error.message ||
+          "Yêu cầu thanh toán thất bại"
+      );
+    }
+  }
+
+  // Chọn phương thức thanh toán (Bước 3: Sau khi waiter chốt bill)
+  async selectPaymentMethod(orderId, paymentMethod) {
+    try {
+      const response = await publicApi.post(
+        `/customer/orders/${orderId}/select-payment-method`,
         {
           payment_method: paymentMethod,
         }
@@ -685,7 +701,7 @@ class CustomerService {
       throw new Error(
         error.response?.data?.error ||
           error.message ||
-          "Yêu cầu thanh toán thất bại"
+          "Không thể chọn phương thức thanh toán"
       );
     }
   }

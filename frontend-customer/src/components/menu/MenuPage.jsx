@@ -102,13 +102,10 @@ const MenuPage = () => {
     });
   };
 
-  // Handler: Yêu cầu thanh toán
-  const handleRequestPayment = async (orderId, paymentMethod) => {
+  // Handler: Yêu cầu thanh toán (Bước 1: Chỉ gọi bill)
+  const handleRequestPayment = async (orderId) => {
     try {
-      const response = await CustomerService.requestPayment(
-        orderId,
-        paymentMethod,
-      );
+      const response = await CustomerService.requestPayment(orderId);
 
       if (response.success) {
         showToast("success", "Đã gửi yêu cầu thanh toán!");
@@ -121,8 +118,8 @@ const MenuPage = () => {
 
         // Hiển thị thông báo đang xử lý
         Swal.fire({
-          title: "Đang xử lý thanh toán",
-          text: `Phương thức: ${paymentMethod}`,
+          title: "Đã gửi yêu cầu",
+          text: "Vui lòng đợi nhân viên xác nhận hóa đơn",
           icon: "info",
           timer: 3000,
           showConfirmButton: false,
