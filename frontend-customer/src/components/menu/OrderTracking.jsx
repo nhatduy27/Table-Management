@@ -12,8 +12,8 @@ import {
 import Swal from "sweetalert2";
 import CustomerService from "../../services/customerService";
 
-// URL Socket của bạn
-const SOCKET_URL = "http://localhost:5000";
+// URL Socket lấy từ env
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
   const [order, setOrder] = useState(null);
@@ -52,7 +52,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
   const handleRequestPayment = async () => {
     // Kiểm tra tất cả món đã served chưa
     const activeItems = (order?.items || []).filter(
-      (i) => i.status !== "cancelled"
+      (i) => i.status !== "cancelled",
     );
     const allServed =
       activeItems.length > 0 && activeItems.every((i) => i.status === "served");
@@ -61,7 +61,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
       Swal.fire(
         "Chưa thể thanh toán",
         "Vui lòng đợi tất cả món được phục vụ.",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -95,7 +95,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
 
           const momoResponse = await CustomerService.createMomoPayment(
             orderId,
-            order.totalAmount
+            order.totalAmount,
           );
 
           if (momoResponse && momoResponse.payUrl) {
@@ -103,7 +103,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
             window.location.href = momoResponse.payUrl;
           } else {
             throw new Error(
-              momoResponse?.message || "Không thể tạo thanh toán MoMo"
+              momoResponse?.message || "Không thể tạo thanh toán MoMo",
             );
           }
         } catch (momoError) {
@@ -111,7 +111,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
           Swal.fire(
             "Lỗi",
             "Không thể tạo thanh toán MoMo: " + momoError.message,
-            "error"
+            "error",
           );
         }
       } else {
@@ -131,7 +131,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
             await CustomerService.completePayment(
               orderId,
               `${selectedPaymentMethod.toUpperCase()}_${Date.now()}`,
-              selectedPaymentMethod
+              selectedPaymentMethod,
             );
             Swal.fire("Thành công!", "Thanh toán hoàn tất.", "success");
           } catch (err) {
@@ -144,7 +144,7 @@ const OrderTracking = ({ orderId, onOrderMore, tableId }) => {
       Swal.fire(
         "Lỗi",
         "Không gửi được yêu cầu thanh toán: " + err.message,
-        "error"
+        "error",
       );
     } finally {
       setIsProcessing(false);

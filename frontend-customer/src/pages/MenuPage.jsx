@@ -23,7 +23,7 @@ import MenuItemDetailModal from "../components/menu/MenuItemDetailModal";
 import FloatingOrderButton from "../components/menu/FloatingOrderButton";
 import BillModal from "../components/menu/BillModal";
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const MenuPage = () => {
   // --- 1. CONFIG & STATE ---
