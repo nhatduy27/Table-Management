@@ -147,7 +147,7 @@ const MenuPage = () => {
 		};
 
 		console.log("Placing order:", orderData);
-		alert(`Order placed successfully! Total: $${cartTotal.toFixed(2)}`);
+		alert(`Order placed successfully! Total: ${cartTotal.toFixed(2)} ₫`);
 		clearCart();
 	};
 
