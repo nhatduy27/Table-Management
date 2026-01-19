@@ -205,7 +205,7 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
         );
       case "cancelled":
         return (
-          <span className="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded border border-red-100 line-through">
+          <span className="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded border border-red-100">
             Hết/Hủy
           </span>
         );
@@ -379,20 +379,17 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <h4
-                              className={`font-bold text-sm text-gray-800 ${isCancelled ? "line-through text-gray-400" : ""}`}
-                            >
-                              {item.menu_item?.name || item.name}
-                            </h4>
-                            <span className="text-xs text-gray-500 font-medium">
-                              {formatCurrency(item.price_at_order || item.menu_item?.price || 0)}
-                            </span>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {getItemStatusBadge(item.status)}
-                          </div>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <h4
+                            className={`font-bold text-sm text-gray-800 ${isCancelled ? "line-through text-gray-400" : ""}`}
+                          >
+                            {item.menu_item?.name || item.name}
+                          </h4>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {formatCurrency(
+                              item.price_at_order || item.menu_item?.price || 0,
+                            )}
+                          </span>
                         </div>
                         {item.modifiers?.length > 0 && (
                           <div className="text-[11px] text-gray-500 mt-1 space-y-0.5">
@@ -432,6 +429,16 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                           </div>
                         )}
 
+                        {/* Hiển thị lý do từ chối nếu item bị cancelled */}
+                        {isCancelled && item.reject_reason && (
+                          <div className="mt-1.5">
+                            <span className="text-[10px] text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 flex items-center gap-1">
+                              <AlertCircle size={10} /> Lý do:{" "}
+                              {item.reject_reason}
+                            </span>
+                          </div>
+                        )}
+
                         {/* REVIEW BUTTON */}
                         {order.status === "completed" && !isCancelled && (
                           <div className="mt-3 pt-2 border-t border-dashed border-gray-100 flex justify-end">
@@ -456,7 +463,10 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col justify-end items-end pl-2">
+                      <div className="flex flex-col justify-between items-end pl-2">
+                        <div className="flex-shrink-0">
+                          {getItemStatusBadge(item.status)}
+                        </div>
                         <p className="font-bold text-sm text-gray-900">
                           {formatCurrency(
                             (parseFloat(
@@ -482,7 +492,7 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                 })}
               </div>
             </div>
-            
+
             {/* FOOTER [UPDATE LOGIC] */}
             <div className="p-4 bg-white border-t space-y-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
               {/* Hiển thị breakdown nếu order đã có subtotal > 0 (tức waiter đã chốt bill) */}
@@ -490,46 +500,52 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                 <>
                   <div className="flex justify-between items-center text-sm text-gray-600">
                     <span>Tạm tính</span>
-                    
+
                     <span>{formatCurrency(order.subtotal)}</span>
                   </div>
-                  
+
                   {order.discount_value > 0 && (
                     <div className="flex justify-between items-center text-sm text-red-600">
                       <span>
-                        Giảm giá 
-                        {order.discount_type === 'percent' && ` (${order.discount_value}%)`}
+                        Giảm giá
+                        {order.discount_type === "percent" &&
+                          ` (${order.discount_value}%)`}
                       </span>
                       <span>
-                        -{formatCurrency(
-                          order.discount_type === 'percent'
+                        -
+                        {formatCurrency(
+                          order.discount_type === "percent"
                             ? (order.subtotal * order.discount_value) / 100
-                            : order.discount_value
+                            : order.discount_value,
                         )}
                       </span>
                     </div>
                   )}
-                  
+
                   {order.tax_amount > 0 && (
                     <div className="flex justify-between items-center text-sm text-gray-600">
                       <span>Thuế</span>
                       <span>+{formatCurrency(order.tax_amount)}</span>
                     </div>
                   )}
-                  
+
                   {/* Hiển thị phương thức thanh toán nếu đã chọn */}
                   {order.payment_method && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Phương thức thanh toán</span>
+                      <span className="text-gray-600">
+                        Phương thức thanh toán
+                      </span>
                       <span className="font-bold text-blue-600">
-                        {order.payment_method === 'cash' && '💵 Tiền mặt'}
-                        {order.payment_method === 'momo' && '🟣 MoMo'}
-                        {order.payment_method === 'vnpay' && '🔵 VNPay'}
-                        {!['cash', 'momo', 'vnpay'].includes(order.payment_method) && order.payment_method}
+                        {order.payment_method === "cash" && "💵 Tiền mặt"}
+                        {order.payment_method === "momo" && "🟣 MoMo"}
+                        {order.payment_method === "vnpay" && "🔵 VNPay"}
+                        {!["cash", "momo", "vnpay"].includes(
+                          order.payment_method,
+                        ) && order.payment_method}
                       </span>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-between items-center text-xl font-bold text-gray-900 pt-2 border-t border-dashed">
                     <span>Tổng cộng</span>
                     <span className="text-orange-600">

@@ -3,25 +3,25 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { io } from "socket.io-client";
 
-import Loading from "../common/Loading";
-import Alert from "../common/Alert";
-import Pagination from "../common/Pagination";
-import tableService from "../../services/tableService";
-import CustomerService from "../../services/customerService";
-import MenuHeader from "./MenuHeader";
-import MenuFooter from "./MenuFooter";
-import CategoryTabs from "./CategoryTabs";
-import MenuItemCard from "./MenuItemCard";
-import CartSidebar from "./CartSidebar";
-import CartButton from "./CartButton";
-import ModifierModal from "./ModifierModal";
-import MenuFilterBar from "./MenuFilterBar";
-import useCart from "./hooks/useCart";
+import Loading from "../components/common/Loading";
+import Alert from "../components/common/Alert";
+import Pagination from "../components/common/Pagination";
+import tableService from "../services/tableService";
+import CustomerService from "../services/customerService";
+import MenuHeader from "../components/menu/MenuHeader";
+import MenuFooter from "../components/menu/MenuFooter";
+import CategoryTabs from "../components/menu/CategoryTabs";
+import MenuItemCard from "../components/menu/MenuItemCard";
+import CartSidebar from "../components/menu/CartSidebar";
+import CartButton from "../components/menu/CartButton";
+import ModifierModal from "../components/menu/ModifierModal";
+import MenuFilterBar from "../components/menu/MenuFilterBar";
+import useCart from "../components/menu/hooks/useCart";
 
-import OrderDetailModal from "./OrderDetailModal";
-import MenuItemDetailModal from "./MenuItemDetailModal";
-import FloatingOrderButton from "./FloatingOrderButton";
-import BillModal from "./BillModal";
+import OrderDetailModal from "../components/menu/OrderDetailModal";
+import MenuItemDetailModal from "../components/menu/MenuItemDetailModal";
+import FloatingOrderButton from "../components/menu/FloatingOrderButton";
+import BillModal from "../components/menu/BillModal";
 
 const SOCKET_URL = "http://localhost:5000";
 
@@ -172,7 +172,7 @@ const MenuPage = () => {
           served: "Đã phục vụ",
           payment_request: "Đang chờ hóa đơn...", // Khách vừa bấm gọi
           payment_pending: "Vui lòng thanh toán", // Waiter đã lập bill xong
-          completed: "Hoàn tất"
+          completed: "Hoàn tất",
         };
         showToast(
           "info",
@@ -184,32 +184,32 @@ const MenuPage = () => {
     // 2. [MỚI] Nghe sự kiện Waiter đã CHỐT BILL (confirmBill)
     // -> Tự động bật BillModal lên để khách thấy tiền & trả
     socketRef.current.on(`bill_confirmed_table_${tableId}`, (updatedOrder) => {
-        console.log("Bill Confirmed:", updatedOrder);
-        setActiveOrder(updatedOrder);
-        setShowOrderDetail(false); 
-        setShowBillModal(true);    // 🔥 BẬT MODAL THANH TOÁN
-        
-        if (navigator.vibrate) navigator.vibrate(200);
-        showToast("info", "Nhân viên đã gửi hóa đơn. Vui lòng kiểm tra!");
+      console.log("Bill Confirmed:", updatedOrder);
+      setActiveOrder(updatedOrder);
+      setShowOrderDetail(false);
+      setShowBillModal(true); // 🔥 BẬT MODAL THANH TOÁN
+
+      if (navigator.vibrate) navigator.vibrate(200);
+      showToast("info", "Nhân viên đã gửi hóa đơn. Vui lòng kiểm tra!");
     });
 
     // 3. [MỚI] Nghe sự kiện Thanh toán thành công (Ví dụ trả tiền mặt)
     socketRef.current.on(`payment_success_table_${tableId}`, ({ orderId }) => {
-        setShowBillModal(false);
-        // Hiện thông báo và cũng hỏi đánh giá cho đồng bộ
-        Swal.fire({
-            title: "Thanh toán thành công!",
-            text: "Cảm ơn quý khách! Bạn có muốn đánh giá ngay không?",
-            icon: "success",
-            showCancelButton: true,
-            confirmButtonText: "Đánh giá ngay",
-            cancelButtonText: "Không",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                navigate(`/customer/orders/${orderId}`);
-            }
-            setActiveOrder(null);
-        });
+      setShowBillModal(false);
+      // Hiện thông báo và cũng hỏi đánh giá cho đồng bộ
+      Swal.fire({
+        title: "Thanh toán thành công!",
+        text: "Cảm ơn quý khách! Bạn có muốn đánh giá ngay không?",
+        icon: "success",
+        showCancelButton: true,
+        confirmButtonText: "Đánh giá ngay",
+        cancelButtonText: "Không",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(`/customer/orders/${orderId}`);
+        }
+        setActiveOrder(null);
+      });
     });
 
     return () => {
@@ -244,7 +244,7 @@ const MenuPage = () => {
             const activeOrderRes =
               await CustomerService.getActiveOrder(tableId);
             console.log("📦 Active order response:", activeOrderRes);
-            
+
             if (activeOrderRes.success && activeOrderRes.data) {
               console.log("✅ Tìm thấy active order:", activeOrderRes.data);
               setActiveOrder(activeOrderRes.data);
@@ -630,7 +630,9 @@ const MenuPage = () => {
       }, []);
     } else {
       // Lấy món từ category được chọn
-      const activeCategoryData = categories.find(cat => cat.id === activeCategory);
+      const activeCategoryData = categories.find(
+        (cat) => cat.id === activeCategory,
+      );
       return activeCategoryData?.items || [];
     }
   };
@@ -642,7 +644,9 @@ const MenuPage = () => {
     if (activeCategory === "all") {
       return "Tất cả món ăn";
     }
-    const activeCategoryData = categories.find(cat => cat.id === activeCategory);
+    const activeCategoryData = categories.find(
+      (cat) => cat.id === activeCategory,
+    );
     return activeCategoryData?.name || "Thực đơn";
   };
 
@@ -720,8 +724,8 @@ const MenuPage = () => {
               </div>
             ) : (
               <div className="py-10 text-center text-gray-500 bg-white rounded-xl border border-dashed">
-                {activeCategory === "all" 
-                  ? "Chưa có món ăn nào trong thực đơn." 
+                {activeCategory === "all"
+                  ? "Chưa có món ăn nào trong thực đơn."
                   : "Chưa có món ăn trong danh mục này."}
               </div>
             )}

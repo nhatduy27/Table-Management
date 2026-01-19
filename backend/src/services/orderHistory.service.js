@@ -129,7 +129,7 @@ const OrderService = {
             },
             {
               association: "items",
-              attributes: ["id", "quantity", "price_at_order", "notes", "status"], 
+              attributes: ["id", "quantity", "price_at_order", "notes", "status", "reject_reason"], 
               include: [
                 {
                   association: "menu_item",
