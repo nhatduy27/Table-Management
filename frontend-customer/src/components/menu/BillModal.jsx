@@ -243,8 +243,11 @@ const BillModal = ({ isOpen, onClose, order, onRequestPayment }) => {
                       <span className="text-gray-700">
                         {item.menu_item?.name}
                       </span>
+                      <span className="text-xs text-gray-500 font-medium ml-2">
+                        {formatCurrency(itemPrice)}
+                      </span>
                       {item.modifiers?.length > 0 && (
-                        <div className="text-xs text-gray-500 pl-6 mt-1">
+                        <div className="text-xs text-gray-500 pl-6 mt-1 space-y-0.5">
                           {item.modifiers.map((m, idx) => {
                             // Lấy giá topping (ưu tiên giá snapshot)
                             const price = parseFloat(
@@ -253,14 +256,12 @@ const BillModal = ({ isOpen, onClose, order, onRequestPayment }) => {
                                 0,
                             );
 
-                            // Format tên: "Tên Topping (Giá)"
-                            // Nếu giá > 0 thì hiện, nếu 0đ thì thôi (hoặc hiện +0đ tùy bạn)
                             return (
-                              <div key={idx}>
-                                + {m.modifier_option?.name || "Topping"}
+                              <div key={idx} className="flex items-center gap-2">
+                                <span>+ {m.modifier_option?.name || "Topping"}</span>
                                 {price > 0 && (
-                                  <span className="font-medium ml-1">
-                                    ({formatCurrency(price)})
+                                  <span className="font-medium text-gray-700">
+                                    {formatCurrency(price)}
                                   </span>
                                 )}
                               </div>
@@ -301,7 +302,12 @@ const BillModal = ({ isOpen, onClose, order, onRequestPayment }) => {
                   )}
                   {parseFloat(displayData.tax) > 0 && (
                     <div className="flex justify-between text-gray-500">
-                      <span>Thuế (VAT/Service)</span>
+                      <span>
+                        Thuế (VAT/Service)
+                        {isReadyToPay && order.subtotal > 0 && 
+                          ` (${((displayData.tax / (displayData.subtotal - displayData.discount)) * 100).toFixed(1)}%)`
+                        }
+                      </span>
                       <span>+{formatCurrency(displayData.tax)}</span>
                     </div>
                   )}

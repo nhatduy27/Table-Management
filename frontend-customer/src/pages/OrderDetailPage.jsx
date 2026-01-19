@@ -195,26 +195,55 @@ const OrderDetailPage = () => {
             
             <div className="divide-y divide-gray-50">
               {items.length > 0 ? items.map((item, index) => {
-                 // Tính giá item (bao gồm topping nếu có logic đó, ở đây hiển thị đơn giản)
-                 const itemTotal = item.total_price || (item.quantity * item.price_at_order);
+                 // 🔥 Tính giá đúng: base price + tất cả modifier prices
+                 const basePrice = parseFloat(item.price_at_order || item.menu_item?.price || 0);
+                 const modifiersTotal = (item.modifiers || []).reduce((sum, mod) => {
+                   return sum + parseFloat(
+                     mod.price ||
+                     mod.price_adjustment ||
+                     mod.modifier_option?.price_adjustment ||
+                     0
+                   );
+                 }, 0);
+                 const itemTotal = (basePrice + modifiersTotal) * item.quantity;
 
                  return (
                     <div key={index} className="p-5 grid grid-cols-12 gap-4 items-start hover:bg-gray-50/50 transition-colors">
                       {/* Tên & Topping */}
                       <div className="col-span-8 md:col-span-6">
-                        <p className="font-bold text-gray-800 break-words text-lg md:text-base">
-                          {item.menu_item?.name || item.name || "Món ăn chưa xác định"}
-                        </p>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <p className="font-bold text-gray-800 break-words text-lg md:text-base">
+                            {item.menu_item?.name || item.name || "Món ăn chưa xác định"}
+                          </p>
+                          <span className="text-sm text-gray-500 font-medium">
+                            {formatCurrency(item.price_at_order)}
+                          </span>
+                        </div>
                         
-                        {/* 🔥 FIX: HIỆN TOPPING (Modifiers) */}
+                        {/* 🔥 FIX: HIỆN TOPPING (Modifiers) VỚI GIÁ */}
                         {item.modifiers && item.modifiers.length > 0 && (
                             <div className="mt-1.5 space-y-1">
-                                {item.modifiers.map((mod, idx) => (
-                                    <p key={idx} className="text-xs text-gray-500 flex items-center gap-1.5">
-                                        <span className="w-1 h-1 rounded-full bg-gray-400"></span>
-                                        <span>+ {mod.modifier_option?.name || mod.name}</span>
-                                    </p>
-                                ))}
+                                {item.modifiers.map((mod, idx) => {
+                                    const modPrice = parseFloat(
+                                      mod.price ||
+                                      mod.price_adjustment ||
+                                      mod.modifier_option?.price_adjustment ||
+                                      0
+                                    );
+                                    return (
+                                      <p key={idx} className="text-xs text-gray-500 flex items-center gap-2">
+                                        <span className="flex items-center gap-1.5">
+                                          <span className="w-1 h-1 rounded-full bg-gray-400"></span>
+                                          <span>+ {mod.modifier_option?.name || mod.name}</span>
+                                        </span>
+                                        {modPrice > 0 && (
+                                          <span className="font-medium text-gray-700">
+                                            {formatCurrency(modPrice)}
+                                          </span>
+                                        )}
+                                      </p>
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -225,10 +254,6 @@ const OrderDetailPage = () => {
                                 <span>{item.notes}</span>
                              </div>
                         )}
-
-                        <p className="text-xs text-gray-400 mt-1 md:hidden">
-                           Đơn giá: {formatCurrency(item.price_at_order)}
-                        </p>
                       </div>
 
                       {/* Số lượng */}
@@ -270,23 +295,91 @@ const OrderDetailPage = () => {
             </div>
 
             {/* Total Section */}
-            <div className="p-6 bg-gray-900 text-white">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/10 rounded-lg hidden md:block">
-                    <Receipt size={24} className="text-orange-500" />
+            <div className="bg-gray-50 border-t-2 border-gray-200">
+              {/* Hiển thị breakdown nếu order đã có subtotal > 0 (waiter đã chốt bill) */}
+              {order?.subtotal > 0 ? (
+                <div className="p-6 space-y-3">
+                  <div className="flex justify-between items-center text-gray-600">
+                    <span className="text-sm">Tạm tính</span>
+                    <span className="font-medium">{formatCurrency(order.subtotal)}</span>
                   </div>
-                  <div>
-                    <span className="block font-medium opacity-90 text-sm">Tổng thanh toán</span>
-                    <span className="text-xs opacity-50 italic">Đã bao gồm thuế & phí</span>
+                  
+                  {order.discount_value > 0 && (
+                    <div className="flex justify-between items-center text-red-600">
+                      <span className="text-sm">
+                        Giảm giá 
+                        {order.discount_type === 'percent' && ` (${order.discount_value}%)`}
+                      </span>
+                      <span className="font-medium">
+                        -{formatCurrency(
+                          order.discount_type === 'percent'
+                            ? (order.subtotal * order.discount_value) / 100
+                            : order.discount_value
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {order.tax_amount > 0 && (
+                    <div className="flex justify-between items-center text-gray-600">
+                      <span className="text-sm">Thuế</span>
+                      <span className="font-medium">+{formatCurrency(order.tax_amount)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Hiển thị phương thức thanh toán nếu đã chọn */}
+                  {order.payment_method && (
+                    <div className="flex justify-between items-center py-2 px-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="text-sm font-medium text-gray-700">Phương thức thanh toán</span>
+                      <span className="font-bold text-blue-600 flex items-center gap-1">
+                        {order.payment_method === 'cash' && '💵 Tiền mặt'}
+                        {order.payment_method === 'momo' && '🟣 MoMo'}
+                        {order.payment_method === 'vnpay' && '🔵 VNPay'}
+                        {!['cash', 'momo', 'vnpay'].includes(order.payment_method) && order.payment_method}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="pt-3 border-t-2 border-dashed border-gray-300">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Receipt size={24} className="text-orange-600" />
+                        </div>
+                        <div>
+                          <span className="block font-bold text-gray-900 text-lg">Tổng thanh toán</span>
+                          <span className="text-xs text-gray-500">Đã bao gồm thuế & phí</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-3xl font-black text-orange-600 tracking-tight">
+                          {formatCurrency(order.total_amount)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-2xl md:text-3xl font-black text-orange-500 tracking-tight">
-                    {formatCurrency(order?.total_amount || totalAmount)}
-                  </span>
+              ) : (
+                // Nếu chưa chốt bill, hiển thị tổng đơn giản
+                <div className="p-6 bg-gray-900 text-white">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white/10 rounded-lg hidden md:block">
+                        <Receipt size={24} className="text-orange-500" />
+                      </div>
+                      <div>
+                        <span className="block font-medium opacity-90 text-sm">Tổng thanh toán</span>
+                        <span className="text-xs opacity-50 italic">Tạm tính</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl md:text-3xl font-black text-orange-500 tracking-tight">
+                        {formatCurrency(order?.total_amount || totalAmount)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           

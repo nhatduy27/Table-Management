@@ -7,7 +7,7 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
   // State quản lý các khoản tiền
   const [discountType, setDiscountType] = useState("percent"); // 'percent' | 'fixed'
   const [discountValue, setDiscountValue] = useState(0);
-  const [taxAmount, setTaxAmount] = useState(0);
+  const [taxPercent, setTaxPercent] = useState(0); // Thuế theo %
   const [note, setNote] = useState("");
 
   // 1. Reset state mỗi khi mở modal với order mới
@@ -15,7 +15,7 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
     if (isOpen) {
         setDiscountType("percent");
         setDiscountValue(0);
-        setTaxAmount(0);
+        setTaxPercent(0);
         setNote("");
     }
   }, [isOpen, order]);
@@ -52,16 +52,19 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
 
   const discountAmount = calculateDiscount();
   
-  // 4. Tính Tổng cuối (Chặn số âm)
-  const tax = parseFloat(taxAmount || 0);
-  const finalTotal = Math.max(0, subtotal + tax - discountAmount);
+  // 4. Tính thuế từ phần trăm (tax_amount = (subtotal - discount) * taxPercent%)
+  const subtotalAfterDiscount = subtotal - discountAmount;
+  const taxAmount = (subtotalAfterDiscount * parseFloat(taxPercent || 0)) / 100;
+  
+  // 5. Tổng cuối (Chặn số âm)
+  const finalTotal = Math.max(0, subtotalAfterDiscount + taxAmount);
 
   // Xử lý Gửi (Confirm)
   const handleConfirm = () => {
     const billData = {
         discount_type: discountType,
         discount_value: parseFloat(discountValue || 0),
-        tax_amount: parseFloat(taxAmount || 0),
+        tax_amount: taxAmount, // Gửi số tiền thuế đã tính, không phải %
         note: note,
     };
     onConfirm(order.id, billData);
@@ -84,9 +87,26 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
     // List món
     order.items.forEach(item => {
         if(item.status !== 'cancelled') {
-             const itemTotal = (parseFloat(item.menu_item?.price || 0) * item.quantity);
-             // Note: Chưa tính giá modifier vào hiển thị chi tiết cho gọn, nhưng tổng tiền vẫn đúng
+             const basePrice = parseFloat(item.menu_item?.price || 0);
+             const modifiersTotal = (item.modifiers || []).reduce((sum, mod) => {
+                 return sum + parseFloat(mod.price || mod.modifier_option?.price_adjustment || 0);
+             }, 0);
+             const itemTotal = (basePrice + modifiersTotal) * item.quantity;
+             
              printWindow.document.write(`<div class="line"><span class="bold">${item.quantity}x ${item.menu_item?.name}</span> <span>${itemTotal.toLocaleString()}</span></div>`);
+             
+             // Hiển thị modifier
+             if (item.modifiers && item.modifiers.length > 0) {
+                 item.modifiers.forEach(mod => {
+                     const modPrice = parseFloat(mod.price || mod.modifier_option?.price_adjustment || 0);
+                     printWindow.document.write(`<div class="line" style="margin-left:20px;font-size:0.85em;color:#666"><span>+ ${mod.modifier_option?.name || mod.name}</span> <span>${modPrice > 0 ? '+' + modPrice.toLocaleString() : ''}</span></div>`);
+                 });
+             }
+             
+             // Hiển thị note
+             if (item.notes) {
+                 printWindow.document.write(`<div style="margin-left:20px;font-size:0.8em;font-style:italic;color:#f97316">Note: ${item.notes}</div>`);
+             }
         }
     });
     
@@ -94,7 +114,7 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
     printWindow.document.write('<hr/>');
     printWindow.document.write(`<div class="line"><span>Tạm tính:</span> <span>${subtotal.toLocaleString()}</span></div>`);
     if(discountAmount > 0) printWindow.document.write(`<div class="line"><span>Giảm giá (${discountType === 'percent' ? discountValue + '%' : 'Fixed'}):</span> <span>-${discountAmount.toLocaleString()}</span></div>`);
-    if(tax > 0) printWindow.document.write(`<div class="line"><span>Thuế:</span> <span>+${tax.toLocaleString()}</span></div>`);
+    if(taxAmount > 0) printWindow.document.write(`<div class="line"><span>Thuế (${taxPercent}%):</span> <span>+${taxAmount.toLocaleString()}</span></div>`);
     
     printWindow.document.write('<hr/>');
     printWindow.document.write(`<div class="line" style="font-size: 1.2em"><span class="bold">TỔNG CỘNG:</span> <span class="bold">${finalTotal.toLocaleString()} đ</span></div>`);
@@ -123,14 +143,42 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
         <div className="p-6 space-y-4">
             {/* Summary List */}
             <div className="bg-gray-50 p-3 rounded text-sm max-h-40 overflow-y-auto border">
-                {order.items?.map((item, idx) => (
-                    item.status !== 'cancelled' && (
-                        <div key={idx} className="flex justify-between mb-1">
-                            <span>{item.quantity}x {item.menu_item?.name}</span>
-                            <span className="font-medium">{(item.menu_item?.price * item.quantity).toLocaleString()}</span>
+                {order.items?.map((item, idx) => {
+                    if (item.status === 'cancelled') return null;
+                    
+                    const basePrice = parseFloat(item.menu_item?.price || 0);
+                    const modifiersTotal = (item.modifiers || []).reduce((sum, mod) => {
+                        return sum + parseFloat(mod.price || mod.modifier_option?.price_adjustment || 0);
+                    }, 0);
+                    const itemTotal = (basePrice + modifiersTotal) * item.quantity;
+                    
+                    return (
+                        <div key={idx} className="mb-2 pb-2 border-b border-gray-200 last:border-0">
+                            <div className="flex justify-between">
+                                <span className="font-medium">{item.quantity}x {item.menu_item?.name}</span>
+                                <span className="font-bold">{itemTotal.toLocaleString()}</span>
+                            </div>
+                            {item.modifiers && item.modifiers.length > 0 && (
+                                <div className="ml-4 text-xs text-gray-500 italic mt-1">
+                                    {item.modifiers.map((mod, midx) => {
+                                        const modPrice = parseFloat(mod.price || mod.modifier_option?.price_adjustment || 0);
+                                        return (
+                                            <div key={midx}>
+                                                + {mod.modifier_option?.name || mod.name}
+                                                {modPrice > 0 && ` (+${modPrice.toLocaleString()})`}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {item.notes && (
+                                <div className="ml-4 text-xs text-orange-600 italic mt-1">
+                                    Ghi chú: {item.notes}
+                                </div>
+                            )}
                         </div>
-                    )
-                ))}
+                    );
+                })}
             </div>
 
             {/* Inputs */}
@@ -160,15 +208,24 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Thuế (VAT/Service)</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">
+                    Thuế (%)
+                </label>
                 <input 
                     type="number" 
-                    value={taxAmount}
-                    onChange={(e) => setTaxAmount(e.target.value)}
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Nhập số tiền thuế..."
+                    value={taxPercent}
+                    onChange={(e) => setTaxPercent(e.target.value)}
+                    className="w-full border p-2 rounded font-bold text-green-600 focus:ring-2 focus:ring-green-500 outline-none"
+                    placeholder="0 (VD: 10 = 10%)"
                     min="0"
+                    max="100"
+                    step="0.1"
                 />
+                {taxPercent > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">
+                        ≈ {taxAmount.toLocaleString()} VNĐ
+                    </div>
+                )}
             </div>
 
             <div>
@@ -193,8 +250,8 @@ const BillConfirmModal = ({ isOpen, onClose, order, onConfirm }) => {
                     <span>-{discountAmount.toLocaleString()} đ</span>
                 </div>
                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Thuế:</span>
-                    <span>+{parseFloat(taxAmount || 0).toLocaleString()} đ</span>
+                    <span>Thuế {taxPercent > 0 && `(${taxPercent}%)`}:</span>
+                    <span>+{taxAmount.toLocaleString()} đ</span>
                 </div>
                 <div className="flex justify-between text-xl font-bold text-blue-800 mt-2 border-t border-dashed pt-2">
                     <span>TỔNG CỘNG:</span>

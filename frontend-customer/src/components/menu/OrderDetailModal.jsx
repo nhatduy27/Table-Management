@@ -380,11 +380,16 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <h4
-                            className={`font-bold text-sm text-gray-800 truncate pr-2 ${isCancelled ? "line-through text-gray-400" : ""}`}
-                          >
-                            {item.menu_item?.name || item.name}
-                          </h4>
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <h4
+                              className={`font-bold text-sm text-gray-800 ${isCancelled ? "line-through text-gray-400" : ""}`}
+                            >
+                              {item.menu_item?.name || item.name}
+                            </h4>
+                            <span className="text-xs text-gray-500 font-medium">
+                              {formatCurrency(item.price_at_order || item.menu_item?.price || 0)}
+                            </span>
+                          </div>
                           <div className="flex-shrink-0">
                             {getItemStatusBadge(item.status)}
                           </div>
@@ -403,7 +408,7 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
                               return (
                                 <div
                                   key={idx}
-                                  className="flex justify-between w-full pr-4"
+                                  className="flex items-center gap-2"
                                 >
                                   <span>
                                     + {mod.modifier_option?.name || mod.name}
@@ -480,19 +485,76 @@ const OrderDetailModal = ({ order, onClose, onRequestBill }) => {
             
             {/* FOOTER [UPDATE LOGIC] */}
             <div className="p-4 bg-white border-t space-y-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
-              <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>Tạm tính</span>
-                <span>
-                  {formatCurrency(order.totalAmount || order.total_amount)}
-                </span>
-              </div>
+              {/* Hiển thị breakdown nếu order đã có subtotal > 0 (tức waiter đã chốt bill) */}
+              {order.subtotal > 0 ? (
+                <>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Tạm tính</span>
+                    
+                    <span>{formatCurrency(order.subtotal)}</span>
+                  </div>
+                  
+                  {order.discount_value > 0 && (
+                    <div className="flex justify-between items-center text-sm text-red-600">
+                      <span>
+                        Giảm giá 
+                        {order.discount_type === 'percent' && ` (${order.discount_value}%)`}
+                      </span>
+                      <span>
+                        -{formatCurrency(
+                          order.discount_type === 'percent'
+                            ? (order.subtotal * order.discount_value) / 100
+                            : order.discount_value
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {order.tax_amount > 0 && (
+                    <div className="flex justify-between items-center text-sm text-gray-600">
+                      <span>Thuế</span>
+                      <span>+{formatCurrency(order.tax_amount)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Hiển thị phương thức thanh toán nếu đã chọn */}
+                  {order.payment_method && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Phương thức thanh toán</span>
+                      <span className="font-bold text-blue-600">
+                        {order.payment_method === 'cash' && '💵 Tiền mặt'}
+                        {order.payment_method === 'momo' && '🟣 MoMo'}
+                        {order.payment_method === 'vnpay' && '🔵 VNPay'}
+                        {!['cash', 'momo', 'vnpay'].includes(order.payment_method) && order.payment_method}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center text-xl font-bold text-gray-900 pt-2 border-t border-dashed">
+                    <span>Tổng cộng</span>
+                    <span className="text-orange-600">
+                      {formatCurrency(order.total_amount)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                // Nếu chưa chốt bill, chỉ hiển thị tổng tạm tính
+                <>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>Tạm tính</span>
+                    <span>
+                      {formatCurrency(order.totalAmount || order.total_amount)}
+                    </span>
+                  </div>
 
-              <div className="flex justify-between items-center text-xl font-bold text-gray-900">
-                <span>Tổng cộng</span>
-                <span className="text-orange-600">
-                  {formatCurrency(order.totalAmount || order.total_amount)}
-                </span>
-              </div>
+                  <div className="flex justify-between items-center text-xl font-bold text-gray-900">
+                    <span>Tổng cộng</span>
+                    <span className="text-orange-600">
+                      {formatCurrency(order.totalAmount || order.total_amount)}
+                    </span>
+                  </div>
+                </>
+              )}
 
               {/* LOGIC NÚT BẤM CẬP NHẬT */}
               {onRequestBill && (

@@ -346,29 +346,73 @@ export const rejectOrderItem = async (req, res) => {
         const { reason } = req.body; 
 
         // 1. Tìm món ăn
-        const item = await OrderItem.findByPk(itemId);
+        const item = await OrderItem.findByPk(itemId, {
+            include: [
+                { model: MenuItem, as: 'menu_item' },
+                { 
+                    model: OrderItemModifier, 
+                    as: 'modifiers',
+                    include: [{ model: ModifierOption, as: 'modifier_option' }]
+                }
+            ]
+        });
         if (!item) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy món' });
         }
 
-        // 2. Cập nhật trạng thái và Lý do vào cột riêng
+        // 2. Lấy order để check status
+        const order = await Order.findByPk(item.order_id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // 3. OPTION A: Chỉ cho reject trước khi confirm bill
+        if (order.status === 'payment_pending' || order.status === 'completed') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Không thể hủy món sau khi đã chốt bill' 
+            });
+        }
+
+        // 4. Tính giá item cần trừ (base price + modifiers)
+        const basePrice = parseFloat(item.price_at_order || item.menu_item?.price || 0);
+        const modifiersTotal = (item.modifiers || []).reduce((sum, mod) => {
+            return sum + parseFloat(
+                mod.price || 
+                mod.modifier_option?.price_adjustment || 
+                0
+            );
+        }, 0);
+        const itemTotal = (basePrice + modifiersTotal) * item.quantity;
+
+        // 5. Trừ giá item khỏi total_amount
+        order.total_amount = Math.max(0, (order.total_amount || 0) - itemTotal);
+        await order.save();
+
+        // 6. Cập nhật trạng thái item
         item.status = 'cancelled';
-        item.reject_reason = reason; // ✅ Lưu vào cột mới
+        item.reject_reason = reason;
         await item.save();
 
-        // 3. Lấy lại Order đầy đủ để bắn Socket
-        // (Cần include lại để FE cập nhật ngay lập tức)
+        // 7. Lấy lại Order đầy đủ để bắn Socket
         const updatedOrder = await Order.findByPk(item.order_id, {
             include: [
                 { 
                     model: OrderItem, as: 'items',
-                    include: [{ model: MenuItem, as: 'menu_item' }, { model: OrderItemModifier, as: 'modifiers', include: ['modifier_option'] }]
+                    include: [
+                        { model: MenuItem, as: 'menu_item' }, 
+                        { 
+                            model: OrderItemModifier, 
+                            as: 'modifiers', 
+                            include: [{ model: ModifierOption, as: 'modifier_option' }]
+                        }
+                    ]
                 },
                 { model: Table, as: 'table' }
             ]
         });
 
-        // 4. Bắn Socket cập nhật UI cho tất cả (Waiter & Kitchen)
+        // 8. Bắn Socket cập nhật UI cho tất cả (Waiter & Kitchen)
         if (req.io) {
             req.io.emit('order_status_updated', updatedOrder);
             if (updatedOrder.table_id) {
