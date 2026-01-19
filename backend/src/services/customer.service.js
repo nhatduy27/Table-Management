@@ -226,7 +226,8 @@ class CustomerService {
         try {
             const verificationRecord = await VerifiedEmail.findOne({
                 where: {
-                    email: email
+                    email: email,
+                    auth_method : 'email'
                 },
                 order: [['created_at', 'DESC']]
             });

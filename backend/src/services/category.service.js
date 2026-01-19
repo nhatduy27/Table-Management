@@ -220,22 +220,6 @@ export class CategoryService {
         return errors;
       }
       
-      // Nếu deactivating category
-      if (newStatus === 'inactive') {
-        // Kiểm tra có active items không
-        const activeItemsCount = await MenuItem.count({
-          where: {
-            category_id: categoryId,
-            status: 'available',
-            is_deleted: false
-          }
-        });
-        
-        if (activeItemsCount > 0) {
-          errors.push(`Cannot deactivate category. It contains ${activeItemsCount} active menu items.`);
-        }
-      }
-      
     
       
     } catch (error) {
