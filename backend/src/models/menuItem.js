@@ -11,14 +11,7 @@ MenuItem.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    restaurant_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'restaurants',
-        key: 'id',
-      },
-    },
+  
     category_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -76,9 +69,7 @@ MenuItem.init(
     createdAt: 'created_at',
     updatedAt: 'updated_at',
     indexes: [
-      {
-        fields: ['restaurant_id'],
-      },
+  
       {
         fields: ['category_id'],
       },
@@ -97,30 +88,12 @@ MenuItem.init(
         is_deleted: false,
       },
     },
-    scopes: {
-      withDeleted: {
-        where: {},
-      },
-      available: {
-        where: {
-          status: 'available',
-          is_deleted: false,
-        },
-      },
-      byRestaurant: (restaurantId) => ({
-        where: {
-          restaurant_id: restaurantId,
-          is_deleted: false,
-        },
-      }),
-    },
   }
 );
 
 MenuItem.associate = (models) => {
-  MenuItem.belongsTo(models.Restaurant, {
-    foreignKey: 'restaurant_id',
-    as: 'restaurant',
+  MenuItem.hasMany(models.OrderItem, { 
+    foreignKey: 'menu_item_id' 
   });
   
   MenuItem.belongsTo(models.MenuCategory, {

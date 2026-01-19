@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import QRService from './qr.service.js';
 
 export class TableService {
+
   /**
    * Tạo bàn mới
    */
@@ -23,6 +24,18 @@ export class TableService {
       description: data.description || null,
       status: data.status || 'active'
     });
+  }
+
+
+
+  //Lấy tên bàn theo ID
+  static async getTableNameOnly(id) {
+    const table = await Table.findByPk(id, {
+      attributes: ['table_number'] // Chỉ lấy duy nhất cột table_number
+    });
+    
+    if (!table) throw new Error('Table not found');
+    return table;
   }
 
   /**

@@ -2,40 +2,59 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http'; // [NEW] Import HTTP module
+import { Server } from 'socket.io';  // [NEW] Import Socket.IO
 
-// Import db từ index (đã bao gồm setup associations)
 import db from '../models/index.js'; 
-
-import tableRoutes from '../routes/table.routes.js'; 
-import menuRoutes from '../routes/menu.routes.js'; 
-import menuItemPhotoRoutes from '../routes/menuItemPhoto.routes.js'; 
-import guestMenuRoutes from "../routes/guestMenu.routes.js"
-import verifyQRTokenMiddleware from '../middlewares/verifyQRToken.middleware.js';
+import rootRouter from '../routes/index.js';
+import tablePublicRoutes from "../routes/restaurant/tablePublic.routes.js"
 
 dotenv.config();
 
 const app = express();
+//app.use('/uploads', express.static('uploads'));
 const PORT = process.env.PORT || 5000;
+
+// [NEW] Setup HTTP Server & Socket.IO
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // Cho phép Frontend (localhost:3000, etc) kết nối
+    methods: ["GET", "POST", "PUT", "DELETE"]
+  }
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/admin/tables', tableRoutes);
-app.use('/api/admin/menu', menuRoutes);
-app.use('/api/admin/menu', menuItemPhotoRoutes); 
+// [NEW] Middleware chèn biến 'io' vào mọi request
+// Giúp bạn gọi req.io.emit() ở bất kỳ controller nào
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
-app.use('/api/menu', verifyQRTokenMiddleware);
-app.use('/api/menu', guestMenuRoutes);
+// Socket.IO Connection Events (Optional: Để debug)
+io.on('connection', (socket) => {
+  console.log('>>> A user connected via Socket:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('>>> User disconnected:', socket.id);
+  });
+});
+
+// Routes
+app.use('/api/public', tablePublicRoutes);
+app.use('/api', rootRouter);
 
 // Test routes
 app.get("/connected", (req, res) => {
-	res.json({
-		status: "OK",
-		database: "Connected successfully",
-		timestamp: new Date().toISOString(),
-	});
+  res.json({
+    status: "OK",
+    database: "Connected successfully",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Start server
@@ -48,7 +67,8 @@ async function startServer() {
     await db.sequelize.sync({ alter: true });
     console.log('>>> Database synced & Associations setup automatically');
     
-    app.listen(PORT, () => {
+    // [CHANGED] Dùng httpServer.listen thay vì app.listen
+    httpServer.listen(PORT, () => {
       console.log(`>>> Server running at http://localhost:${PORT}`);
     });
     

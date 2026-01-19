@@ -1,3 +1,6 @@
+
+
+
 import Joi from "joi";
 
 //base schema dùng chung cho create, update
@@ -19,7 +22,6 @@ export const baseModifierGroupSchema = {
 
 //create (POST)
 export const createModifierGroupSchema = Joi.object({
-	restaurant_id: Joi.string().uuid().required(),
 
 	name: baseModifierGroupSchema.name.required(),
 

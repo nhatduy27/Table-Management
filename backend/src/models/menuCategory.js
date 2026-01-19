@@ -11,14 +11,7 @@ MenuCategory.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    restaurant_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'restaurants',
-        key: 'id',
-      },
-    },
+    
     name: {
       type: DataTypes.STRING(50),
       allowNull: false,
@@ -50,13 +43,6 @@ MenuCategory.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        unique: true,
-        fields: ['restaurant_id', 'name'],
-      },
-      {
-        fields: ['restaurant_id'],
-      },
-      {
         fields: ['status'],
       },
       {
@@ -67,10 +53,6 @@ MenuCategory.init(
 );
 
 MenuCategory.associate = (models) => {
-  MenuCategory.belongsTo(models.Restaurant, {
-    foreignKey: 'restaurant_id',
-    as: 'restaurant',
-  });
   
   MenuCategory.hasMany(models.MenuItem, {
     foreignKey: 'category_id',

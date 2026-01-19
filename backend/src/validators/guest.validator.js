@@ -1,49 +1,68 @@
-import Joi from "joi";
+import Joi from 'joi';
 
-export const guestMenuQuerySchema = Joi.object({
-  q: Joi.string()
-    .max(100)
-    .allow("")
-    .optional()
+// Schema cho tạo order mới
+export const createOrderSchema = Joi.object({
+  table_id: Joi.string()
+    .uuid()
+    .required()
     .messages({
-      "string.max": "Search keyword must be at most 100 characters",
+      'string.guid': 'Mã bàn phải là UUID hợp lệ',
+      'any.required': 'Mã bàn là bắt buộc'
     }),
 
-  categoryId: Joi.string()
-    .guid({ version: "uuidv4" })
-    .optional()
+  total_amount: Joi.number()
+    .min(0)
+    .required()
     .messages({
-      "string.guid": "categoryId must be a valid UUID",
+      'number.base': 'Tổng tiền phải là số',
+      'number.min': 'Tổng tiền không được nhỏ hơn 0',
+      'any.required': 'Tổng tiền là bắt buộc'
     }),
 
-  sort: Joi.string()
-    .valid("popularity")
-    .optional()
+  ordered_at: Joi.date()
+    .iso()
+    .max('now')
+    .optional() // Thêm optional nếu không bắt buộc gửi từ client
     .messages({
-        "any.only": "sort only supports 'popularity'",
-  }),
-
-  chefRecommended: Joi.boolean()
-    .optional()
-    .messages({
-      "boolean.base": "chefRecommended must be boolean",
+      'date.base': 'Ngày đặt hàng không hợp lệ',
+      'date.iso': 'Ngày đặt hàng phải theo định dạng ISO',
+      'date.max': 'Ngày đặt hàng không thể là tương lai'
     }),
 
+});
+
+// Schema cho query params (lấy lịch sử đơn hàng)
+export const orderQueryParamsSchema = Joi.object({
   page: Joi.number()
     .integer()
     .min(1)
     .default(1)
     .messages({
-      "number.base": "page must be a number",
-      "number.min": "page must be at least 1",
+      'number.base': 'Số trang phải là số nguyên',
+      'number.min': 'Số trang phải lớn hơn hoặc bằng 1'
     }),
 
   limit: Joi.number()
     .integer()
     .min(1)
-    .max(50)
+    .max(100)
     .default(10)
     .messages({
-      "number.max": "limit must be less than or equal to 50",
+      'number.base': 'Giới hạn phải là số nguyên',
+      'number.max': 'Giới hạn không được vượt quá 100'
     }),
+
+  sort_by: Joi.string()
+    .valid('ordered_at', 'total_amount', 'created_at')
+    .default('ordered_at')
+    .messages({
+      'any.only': 'Trường sắp xếp không hợp lệ'
+    }),
+
+  order: Joi.string()
+    .valid('asc', 'desc')
+    .default('desc')
+    .messages({
+      'any.only': 'Thứ tự sắp xếp không hợp lệ'
+    })
 });

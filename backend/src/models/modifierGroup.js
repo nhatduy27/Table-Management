@@ -11,14 +11,6 @@ ModifierGroup.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    restaurant_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'restaurants',
-        key: 'id',
-      },
-    },
     name: {
       type: DataTypes.STRING(80),
       allowNull: false,
@@ -65,9 +57,6 @@ ModifierGroup.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        fields: ['restaurant_id'],
-      },
-      {
         fields: ['status'],
       },
       {
@@ -78,11 +67,6 @@ ModifierGroup.init(
 );
 
 ModifierGroup.associate = (models) => {
-  ModifierGroup.belongsTo(models.Restaurant, {
-    foreignKey: 'restaurant_id',
-    as: 'restaurant',
-  });
-  
   ModifierGroup.hasMany(models.ModifierOption, {
     foreignKey: 'group_id',
     as: 'options',

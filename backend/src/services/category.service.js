@@ -1,6 +1,5 @@
 // src/services/categoryService.js
 import MenuCategory from '../models/menuCategory.js';
-import Restaurant from '../models/restaurant.js';
 import MenuItem from '../models/menuItem.js';
 import { Op } from 'sequelize';
 
@@ -54,15 +53,12 @@ export class CategoryService {
   }
 
   
-  static async validateUpdateData(categoryId, data, restaurantId = null) {
+  static async validateUpdateData(categoryId, data) {
     const errors = this.validateCategoryData(data, true); // isUpdate = true
     
     try {
       // 1. Kiểm tra category tồn tại
       const where = { id: categoryId };
-      if (restaurantId) {
-        where.restaurant_id = restaurantId;
-      }
       
       const category = await MenuCategory.findOne({ where });
       
@@ -75,7 +71,6 @@ export class CategoryService {
       if (data.name !== undefined && data.name.trim() !== category.name) {
         const duplicateCategory = await MenuCategory.findOne({
           where: {
-            restaurant_id: category.restaurant_id,
             name: data.name.trim(),
             id: { [Op.ne]: categoryId }
           }
@@ -106,20 +101,10 @@ export class CategoryService {
       if (data.display_order !== undefined && data.display_order !== category.display_order) {
         // Có thể kiểm tra display_order có hợp lệ trong context của restaurant không
         // Ví dụ: không cho phép vượt quá số lượng category
-        const maxDisplayOrder = await MenuCategory.max('display_order', {
-          where: { restaurant_id: category.restaurant_id }
-        });
+        const maxDisplayOrder = await MenuCategory.max('display_order') || 0;
         
         if (data.display_order > maxDisplayOrder + 10) {
           errors.push(`Display order is too high. Maximum suggested: ${maxDisplayOrder + 1}`);
-        }
-      }
-      
-      // 5. Kiểm tra restaurant có active không (nếu update status category)
-      if (data.status === 'active' && category.status === 'inactive') {
-        const restaurant = await Restaurant.findByPk(category.restaurant_id);
-        if (restaurant && restaurant.status !== 'active') {
-          errors.push('Cannot activate category because the restaurant is not active');
         }
       }
       
@@ -133,13 +118,10 @@ export class CategoryService {
     return errors;
   }
   
-  static async update(categoryId, data, restaurantId = null) {
+  static async update(categoryId, data) {
     
     // Tìm category
     const where = { id: categoryId };
-    if (restaurantId) {
-      where.restaurant_id = restaurantId;
-    }
     
     const category = await MenuCategory.findOne({ where });
     if (!category) {
@@ -217,16 +199,12 @@ export class CategoryService {
 
 
  //CẬP NHẬT STATUS CHO CATEGORY
-  static async validateStatusUpdate(categoryId, newStatus, restaurantId = null) {
+  static async validateStatusUpdate(categoryId, newStatus) {
     const errors = [];
     
     try {
       // Tìm category
       const where = { id: categoryId };
-      if (restaurantId) {
-        where.restaurant_id = restaurantId;
-      }
-      
       const category = await MenuCategory.findOne({ where });
       
       if (!category) {
@@ -258,14 +236,7 @@ export class CategoryService {
         }
       }
       
-      // Nếu activating category
-      if (newStatus === 'active' && currentStatus === 'inactive') {
-        // Kiểm tra restaurant có active không
-        const restaurant = await Restaurant.findByPk(category.restaurant_id);
-        if (restaurant && restaurant.status !== 'active') {
-          errors.push('Cannot activate category because the restaurant is not active');
-        }
-      }
+    
       
     } catch (error) {
       errors.push(`Validation error: ${error.message}`);
@@ -275,9 +246,9 @@ export class CategoryService {
   }
   
   // UPDATE STATUS
-  static async updateStatus(categoryId, newStatus, restaurantId = null) {
+  static async updateStatus(categoryId, newStatus) {
     // Validate
-    const validationErrors = await this.validateStatusUpdate(categoryId, newStatus, restaurantId);
+    const validationErrors = await this.validateStatusUpdate(categoryId, newStatus);
     
     if (validationErrors.length > 0) {
       throw new Error(`Status update validation failed: ${validationErrors.join(', ')}`);
@@ -285,9 +256,6 @@ export class CategoryService {
     
     // Tìm category
     const where = { id: categoryId };
-    if (restaurantId) {
-      where.restaurant_id = restaurantId;
-    }
     
     const category = await MenuCategory.findOne({ where });
     if (!category) {
@@ -341,6 +309,71 @@ export class CategoryService {
         restaurant_status: updatedCategory.restaurant?.status
       }
     };
+  }
+
+
+  static async create(data) {
+    // Validate dữ liệu đầu vào
+    const validationErrors = this.validateCategoryData(data);
+    if (validationErrors.length > 0) {
+      throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+    }
+    
+    try {
+      // 1. Kiểm tra trùng tên danh mục
+      const existingCategory = await MenuCategory.findOne({
+        where: {
+          name: data.name.trim(),
+        }
+      });
+      
+      if (existingCategory) {
+        throw new Error(`Category "${data.name}" already exists`);
+      }
+      
+      // 2. Xác định display_order nếu không có
+      let displayOrder = data.display_order;
+      if (displayOrder === undefined) {
+        // Lấy display_order cao nhất và +1
+        const maxOrder = await MenuCategory.max('display_order', {
+
+        });
+        displayOrder = (maxOrder || 0) + 1;
+      }
+      
+      // 3. Chuẩn bị dữ liệu tạo
+      const categoryData = {
+        name: data.name.trim(),
+        description: data.description ? data.description.trim() : null,
+        display_order: displayOrder,
+        status: data.status || 'active',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      
+      // 4. Tạo danh mục mới
+      const newCategory = await MenuCategory.create(categoryData);
+      
+      // 5. Lấy thông tin đầy đủ với các quan hệ nếu có
+      const createdCategory = await MenuCategory.findByPk(newCategory.id);
+      
+      return {
+        category: createdCategory,
+        metadata: {
+          display_order: displayOrder,
+          created_at: createdCategory.created_at
+        }
+      };
+      
+    } catch (error) {
+      // Xử lý lỗi cụ thể từ database
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        throw new Error(`Category "${data.name}" already exists in the database`);
+      }
+      
+      // Ném lại lỗi để controller xử lý
+      throw error;
+    }
   }
   
 
