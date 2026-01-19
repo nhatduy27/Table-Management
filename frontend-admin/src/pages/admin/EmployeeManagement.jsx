@@ -1,14 +1,10 @@
-// src/pages/admin/EmployeeManagement.jsx
 import React, { useState, useEffect } from "react";
-// Import đủ các hàm từ service
 import { getAllUsers, createNewUser, updateUser, toggleUserStatus } from "../../services/authService"; 
 import { Edit, Lock, Unlock, UserPlus, Save, X, ChefHat, Coffee } from "lucide-react";
 
 const EmployeeManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  // State form
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -17,10 +13,9 @@ const EmployeeManagement = () => {
     username: "",
     password: "",
     full_name: "",
-    role: "waiter", // Mặc định
+    role: "waiter",
   });
 
-  // 1. FETCH DATA
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -37,7 +32,6 @@ const EmployeeManagement = () => {
     fetchEmployees(); 
   }, []);
 
-  // 2. HANDLERS
   const resetForm = () => {
     setFormData({ username: "", password: "", full_name: "", role: "waiter" });
     setIsEditing(false);
@@ -48,7 +42,7 @@ const EmployeeManagement = () => {
   const handleEditClick = (user) => {
     setFormData({
       username: user.username,
-      password: "", // Reset pass khi edit
+      password: "",
       full_name: user.full_name,
       role: user.role,
     });
@@ -86,140 +80,248 @@ const EmployeeManagement = () => {
     }
   };
 
-  return (
-    <div className="p-6 font-sans">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý Nhân viên</h1>
-          <p className="text-sm text-gray-500">Quản lý Phục vụ (Waiter) và Bếp (Kitchen)</p>
-        </div>
-        <button 
-          onClick={() => { resetForm(); setShowForm(!showForm); }} 
-          className={`${showForm ? 'bg-gray-500' : 'bg-blue-600'} text-white px-4 py-2 rounded shadow hover:opacity-90 flex items-center gap-2 transition-all`}
-        >
-           {showForm ? <><X size={18}/> Đóng</> : <><UserPlus size={18}/> Thêm Nhân viên</>}
-        </button>
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
       </div>
+    </div>
+  );
 
-      {/* FORM */}
-      {showForm && (
-        <div className="bg-white p-6 rounded-xl shadow-lg mb-8 border border-blue-100 animate-fade-in">
-          <h3 className="text-lg font-bold mb-4 text-blue-800 flex items-center gap-2">
-            {isEditing ? <Edit size={20}/> : <UserPlus size={20}/>}
-            {isEditing ? "Cập nhật nhân viên" : "Thông tin nhân viên mới"}
-          </h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Tên đăng nhập</label>
-              <input 
-                className={`w-full border p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${isEditing ? 'bg-gray-100 text-gray-500' : ''}`}
-                placeholder="Username" 
-                value={formData.username}
-                onChange={(e) => setFormData({...formData, username: e.target.value})} 
-                disabled={isEditing}
-                required
-              />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-teal-50 to-cyan-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* HEADER */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-md">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                  Quản lý Nhân viên
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Quản lý Phục vụ (Waiter) và Bếp (Kitchen)
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
-                 Mật khẩu {isEditing && <span className="text-xs font-normal text-red-500">(Để trống nếu không đổi)</span>}
-              </label>
-              <input 
-                type="password" 
-                className="w-full border p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={isEditing ? "Nhập mật khẩu mới..." : "********"}
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                required={!isEditing} 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Họ và tên</label>
-              <input 
-                className="w-full border p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" 
-                placeholder="Nguyễn Văn A"
-                value={formData.full_name}
-                onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Vai trò</label>
-              <select 
-                className="w-full border p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                value={formData.role}
-                onChange={(e) => setFormData({...formData, role: e.target.value})}
-              >
-                <option value="waiter">Phục vụ (Waiter)</option>
-                <option value="kitchen">Bếp (Kitchen)</option>
-              </select>
-            </div>
-            
-            <div className="md:col-span-2 flex justify-end gap-3 mt-2">
-               <button type="button" onClick={resetForm} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Hủy</button>
-               <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-green-700 flex items-center gap-2">
-                  <Save size={18}/> Lưu lại
-               </button>
-            </div>
-          </form>
+            <button 
+              onClick={() => { resetForm(); setShowForm(!showForm); }} 
+              className={`${
+                showForm 
+                  ? 'bg-gray-500 hover:bg-gray-600' 
+                  : 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700'
+              } text-white px-6 py-3 rounded-xl shadow-md hover:shadow-lg flex items-center gap-2 transition-all transform hover:scale-105`}
+            >
+              {showForm ? <><X size={18}/> Đóng</> : <><UserPlus size={18}/> Thêm Nhân viên</>}
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* DANH SÁCH */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-gray-700 uppercase text-xs font-bold">
-            <tr>
-              <th className="p-4">STT</th>
-              <th className="p-4">Họ tên</th>
-              <th className="p-4">Username</th>
-              <th className="p-4">Vai trò</th>
-              <th className="p-4">Trạng thái</th>
-              <th className="p-4 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {users.map((u, index) => (
-              <tr key={u.id} className="hover:bg-blue-50/50 transition-colors">
-                <td className="p-4 text-gray-500">{index + 1}</td>
-                <td className="p-4 font-bold text-gray-900">{u.full_name}</td>
-                <td className="p-4 font-mono text-blue-600">{u.username}</td>
-                <td className="p-4">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                    u.role === 'kitchen' 
-                      ? 'bg-orange-100 text-orange-800 border-orange-200' 
-                      : 'bg-blue-100 text-blue-800 border-blue-200'
-                  }`}>
-                    {u.role === 'kitchen' ? <ChefHat size={14}/> : <Coffee size={14}/>}
-                    {u.role.toUpperCase()}
-                  </span>
-                </td>
-                <td className="p-4">
-                    {u.is_active ? (
-                      <span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-100">Active</span>
-                    ) : (
-                      <span className="text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-100">Locked</span>
-                    )}
-                </td>
-                <td className="p-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => handleEditClick(u)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors" title="Sửa">
-                       <Edit size={16}/>
-                    </button>
-                    <button 
-                      onClick={() => handleToggleStatus(u)} 
-                      className={`p-2 rounded transition-colors ${u.is_active ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-green-600 bg-green-50 hover:bg-green-100'}`}
-                      title={u.is_active ? "Khóa" : "Mở khóa"}
-                    >
-                       {u.is_active ? <Lock size={16}/> : <Unlock size={16}/>}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* STATS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-teal-100 text-sm font-medium">Tổng Nhân viên</p>
+              <svg className="w-8 h-8 text-teal-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold">{users.length}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-blue-100 text-sm font-medium">Phục vụ</p>
+              <Coffee className="w-8 h-8 text-blue-200" />
+            </div>
+            <p className="text-4xl font-bold">{users.filter(u => u.role === 'waiter').length}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-orange-100 text-sm font-medium">Bếp</p>
+              <ChefHat className="w-8 h-8 text-orange-200" />
+            </div>
+            <p className="text-4xl font-bold">{users.filter(u => u.role === 'kitchen').length}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-green-100 text-sm font-medium">Đang hoạt động</p>
+              <svg className="w-8 h-8 text-green-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold">{users.filter(u => u.is_active).length}</p>
+          </div>
+        </div>
+
+        {/* FORM */}
+        {showForm && (
+          <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 border border-teal-100 animate-fade-in">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-teal-100 rounded-lg">
+                {isEditing ? <Edit size={20} className="text-teal-600"/> : <UserPlus size={20} className="text-teal-600"/>}
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">
+                {isEditing ? "Cập nhật nhân viên" : "Thông tin nhân viên mới"}
+              </h3>
+            </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tên đăng nhập</label>
+                <input 
+                  className={`w-full border-2 border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                    isEditing ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'hover:border-gray-300'
+                  }`}
+                  placeholder="username123" 
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})} 
+                  disabled={isEditing}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Mật khẩu {isEditing && <span className="text-xs font-normal text-red-500">(Để trống nếu không đổi)</span>}
+                </label>
+                <input 
+                  type="password" 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent hover:border-gray-300 transition-all"
+                  placeholder={isEditing ? "Nhập mật khẩu mới..." : "********"}
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  required={!isEditing} 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Họ và tên</label>
+                <input 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent hover:border-gray-300 transition-all" 
+                  placeholder="Nguyễn Văn A"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Vai trò</label>
+                <select 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white hover:border-gray-300 transition-all"
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                >
+                  <option value="waiter">☕ Phục vụ (Waiter)</option>
+                  <option value="kitchen">👨‍🍳 Bếp (Kitchen)</option>
+                </select>
+              </div>
+              
+              <div className="md:col-span-2 flex justify-end gap-3 mt-4">
+                <button 
+                  type="button" 
+                  onClick={resetForm} 
+                  className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-all"
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit" 
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:shadow-lg flex items-center gap-2 transition-all transform hover:scale-105"
+                >
+                  <Save size={18}/> Lưu lại
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* TABLE */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-gray-50 to-teal-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">STT</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Họ tên</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Username</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Vai trò</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map((u, index) => (
+                  <tr key={u.id} className="hover:bg-gradient-to-r hover:from-teal-50 hover:to-transparent transition-all">
+                    <td className="px-6 py-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <span className="text-sm font-bold text-gray-600">{index + 1}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-semibold text-gray-900">{u.full_name}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-mono text-sm bg-gray-100 px-3 py-1.5 rounded-lg text-gray-700">
+                        {u.username}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${
+                        u.role === 'kitchen' 
+                          ? 'bg-orange-100 text-orange-800 border border-orange-200' 
+                          : 'bg-blue-100 text-blue-800 border border-blue-200'
+                      }`}>
+                        {u.role === 'kitchen' ? <ChefHat size={14}/> : <Coffee size={14}/>}
+                        {u.role === 'kitchen' ? 'BẾP' : 'PHỤC VỤ'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {u.is_active ? (
+                        <span className="inline-flex items-center gap-1.5 text-green-700 font-bold text-xs bg-green-100 px-3 py-1.5 rounded-lg border border-green-200">
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-red-700 font-bold text-xs bg-red-100 px-3 py-1.5 rounded-lg border border-red-200">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          Locked
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => handleEditClick(u)} 
+                          className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all hover:scale-110" 
+                          title="Sửa"
+                        >
+                          <Edit size={16}/>
+                        </button>
+                        <button 
+                          onClick={() => handleToggleStatus(u)} 
+                          className={`p-2.5 rounded-lg transition-all hover:scale-110 ${
+                            u.is_active 
+                              ? 'text-red-600 bg-red-50 hover:bg-red-100' 
+                              : 'text-green-600 bg-green-50 hover:bg-green-100'
+                          }`}
+                          title={u.is_active ? "Khóa" : "Mở khóa"}
+                        >
+                          {u.is_active ? <Lock size={16}/> : <Unlock size={16}/>}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
