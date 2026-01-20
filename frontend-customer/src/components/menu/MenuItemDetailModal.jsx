@@ -115,7 +115,7 @@ const MenuItemDetailModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         {/* --- ẢNH HEADER --- */}
-        <div className="relative h-64 sm:h-72 bg-gray-100 flex-shrink-0">
+        <div className="relative h-44 sm:h-48 bg-gray-100 flex-shrink-0">
           <img
             src={images[currentImageIndex]}
             alt={item.name}
