@@ -32,7 +32,7 @@ class CustomerService {
     // Đăng ký với OTP
     async register(username, email, password, auth_method){
         const existAccount = await Customer.findOne({
-            where: { email: email }
+            where: { email: email, auth_method : auth_method }
         });
 
         if(existAccount){
