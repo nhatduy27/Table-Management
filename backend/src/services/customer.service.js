@@ -189,28 +189,27 @@ class CustomerService {
                 where: {
                     customer_uid: customer.uid,
                     email: customer.email,
+                    Auth_method : customer.auth_method,
                     is_verified: false,
-                    otp_expires: {
-                        $gt: new Date()
-                    }
                 }
             });
 
-            // Nếu không có OTP active, tạo mới và gửi email
-            if (!activeOTP) {
-                const otp = OTPService.generateOTP();
-                const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
-                
-                await VerifiedEmail.create({
-                    customer_uid: customer.uid,
-                    email: customer.email,
-                    otp_code: otp,
-                    otp_expires: otpExpires,
-                    is_verified: false
-                });
 
-                await emailService.sendOTPEmail(customer.email, otp, customer.username);
+            if (activeOTP) {
+                await activeOTP.destroy(); // Xóa OTP cũ
             }
+            const otp = OTPService.generateOTP();
+            const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
+            
+            await VerifiedEmail.create({
+                customer_uid: customer.uid,
+                email: customer.email,
+                otp_code: otp,
+                otp_expires: otpExpires,
+                is_verified: false
+            });
+
+            await emailService.sendOTPEmail(customer.email, otp, customer.username);
             throw new Error("EMAIL_NOT_VERIFIED");
         }
 
