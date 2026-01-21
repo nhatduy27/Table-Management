@@ -189,7 +189,7 @@ class CustomerService {
                 where: {
                     customer_uid: customer.uid,
                     email: customer.email,
-                    Auth_method : customer.auth_method,
+                    auth_method : customer.auth_method,
                     is_verified: false,
                 }
             });
